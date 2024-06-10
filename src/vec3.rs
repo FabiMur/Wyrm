@@ -37,6 +37,10 @@ impl Vec3 {
         }
     }
 
+    pub fn unit_vector(&self) -> Self {
+        *self / self.length()
+    }
+
     pub fn x(&self) -> f64 {
         self.x
     }
@@ -86,6 +90,18 @@ impl Mul<f64> for Vec3 {
     }
 }
 
+impl Mul<Vec3> for f64 {
+    type Output = Vec3;
+
+    fn mul(self, vector: Vec3) -> Vec3 {
+        Vec3 {
+            x: vector.x * self,
+            y: vector.y * self,
+            z: vector.z * self,
+        }
+    }
+}
+
 impl Div<f64> for Vec3 {
     type Output = Self;
 
@@ -94,6 +110,18 @@ impl Div<f64> for Vec3 {
             x: self.x / scalar,
             y: self.y / scalar,
             z: self.z / scalar,
+        }
+    }
+}
+
+impl Div<Vec3> for f64 {
+    type Output = Vec3;
+
+    fn div(self, vector: Vec3) -> Vec3 {
+        Vec3 {
+            x: vector.x / self,
+            y: vector.y / self,
+            z: vector.z / self,
         }
     }
 }
@@ -121,3 +149,5 @@ impl IndexMut<usize> for Vec3 {
         }
     }
 }
+
+pub type Point3 = Vec3;
