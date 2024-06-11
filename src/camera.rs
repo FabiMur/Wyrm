@@ -6,6 +6,7 @@ use crate::color::write_color;
 use std::cmp::max;
 use std::io::{self};
 use log::info;
+use crate::interval::Interval;
 
 pub struct Camera {
     pub aspect_ratio: f64,
@@ -63,7 +64,7 @@ impl Camera {
     pub fn render(&self, world: &dyn Hittable) -> io::Result<()> {
         println!("P3\n{} {}\n255", self.image_width, self.image_height);
 
-        for j in (0..self.image_height).rev() {
+        for j in 0..self.image_height {
             info!("Scanlines remaining: {}", self.image_height - j);
             for i in 0..self.image_width {
                 // Calculate the center of the pixel center moving i times to the right and 
@@ -85,7 +86,7 @@ impl Camera {
 
     pub fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
         let mut rec = HitRecord::default();
-        if world.hit(r, 0.001, INFINITY, &mut rec) {
+        if world.hit(r, Interval::new(0.0001, INFINITY), &mut rec) {
             return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
         }
 
