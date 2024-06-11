@@ -1,4 +1,5 @@
 use std::ops::{Add, Sub, Mul, Div, Neg, Index, IndexMut};
+use crate::utils::{random_double, random_double_range};
 
 #[derive(Debug, Copy, Clone, Default)]
 pub struct Vec3 {
@@ -10,6 +11,43 @@ pub struct Vec3 {
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
+    }
+
+    fn random() -> Self {
+        Self{x: random_double(), y: random_double(), z: random_double()}
+    }
+
+    // Generates a random vector with componentes initialized between min and max.
+    pub fn random_in_range(min: f64, max: f64) -> Self {
+        Self{x: random_double_range(min, max), y: random_double_range(min, max), z: random_double_range(min, max)}
+    }
+
+    // Generates a vector with a modulus under 1
+    pub fn random_in_unit_sphere() -> Self {
+        let mut p: Vec3 = Vec3::random_in_range(-1.0, 1.0);
+        loop {
+            if p.length_squared() < 1.0 {
+                break;
+            }
+            p = Vec3::random_in_range(-1.0, 1.0);
+        }
+
+        return p;
+    }
+
+    pub fn random_unit_vector() -> Self {
+        return unit_vector(&Vec3::random_in_unit_sphere())
+    }
+
+    // Generates a random vector in the same hemisphere of another vector
+    // (The surface normal of an impact)
+    pub fn random_on_hemisphere(normal: &Vec3) -> Self {
+        let on_unit_sphere = Vec3::random_unit_vector();
+        if dot(&on_unit_sphere, normal) > 0.0 {
+            on_unit_sphere
+        } else {
+            -on_unit_sphere
+        }
     }
 
     pub fn length(&self) -> f64 {

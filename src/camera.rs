@@ -18,6 +18,7 @@ pub struct Camera {
     pub pixel_delta_v: Vec3,
     pub samples_per_pixel: i32,
     pub pixel_samples_scale: f64,
+    pub depth: i32,
 }
 
 impl Camera {
@@ -56,6 +57,9 @@ impl Camera {
         let samples_per_pixel: i32 = 100;
         let pixel_samples_scale: f64 = 1.0 / samples_per_pixel as f64;
 
+        // How many bounces is a given ray allowd to do
+        let depth: i32 = 10;
+
         Self {
             aspect_ratio,
             image_width,
@@ -66,6 +70,7 @@ impl Camera {
             pixel_delta_v,
             samples_per_pixel,
             pixel_samples_scale,
+            depth,
         }
     }
 
@@ -78,7 +83,7 @@ impl Camera {
                 let mut pixel_color: Vec3 = Vec3::new(0.0, 0.0, 0.0);
                 for _sample in 0..self.samples_per_pixel {
                     let r: Ray = self.get_ray(i,j);
-                    pixel_color = pixel_color + ray_color(&r, world);
+                    pixel_color = pixel_color + ray_color(&r, world, self.depth);
                 }
 
                 write_color(&mut io::stdout(), &(self.pixel_samples_scale * pixel_color))?;
@@ -106,14 +111,21 @@ fn sample_square() -> Vec3 {
     Vec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
 }
 
-pub fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
+pub fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
     let mut rec = HitRecord::default();
+    if depth <= 0 {
+        // Si hemos alcanzado el límite de profundidad, devolvemos negro
+        return Color::new(0.0, 0.0, 0.0);
+    }
+
     if world.hit(r, Interval::new(0.0001, INFINITY), &mut rec) {
-        return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
+        let direction = Vec3::random_on_hemisphere(&rec.normal);
+        return 0.5 * ray_color(&Ray::new(rec.p, direction), world, depth - 1);
     }
 
     let unit_direction = r.direction().unit_vector();
     let t = 0.5 * (unit_direction.y + 1.0);
-    return (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0);
+    (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }
+
 
