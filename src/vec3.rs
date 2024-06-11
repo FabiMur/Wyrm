@@ -78,6 +78,30 @@ impl Sub for Vec3 {
     }
 }
 
+impl Sub<&Vec3> for Vec3 {
+    type Output = Self;
+
+    fn sub(self, other: &Vec3) -> Self {
+        Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+        }
+    }
+}
+
+impl Sub<Vec3> for &Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, other: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+        }
+    }
+}
+
 impl Mul<f64> for Vec3 {
     type Output = Self;
 
@@ -149,5 +173,12 @@ impl IndexMut<usize> for Vec3 {
         }
     }
 }
+
+// Wrapper for dot method
+#[inline(always)]
+pub fn dot(v: &Vec3, w: &Vec3) -> f64 {
+    v.dot(w)
+}
+
 
 pub type Point3 = Vec3;
