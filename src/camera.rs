@@ -4,7 +4,8 @@ use crate::ray::{Ray};
 use crate::hittable::{HitRecord, Hittable};
 use crate::color::write_color;
 use std::cmp::max;
-use std::io::{self};
+use std::fs::File;
+use std::io::{self, Write};
 use log::info;
 use crate::interval::Interval;
 
@@ -58,7 +59,7 @@ impl Camera {
         let pixel_samples_scale: f64 = 1.0 / samples_per_pixel as f64;
 
         // How many bounces is a given ray allowd to do
-        let depth: i32 = 10;
+        let depth: i32 = 50;
 
         Self {
             aspect_ratio,
@@ -74,19 +75,21 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, world: &dyn Hittable) -> io::Result<()> {
-        println!("P3\n{} {}\n255", self.image_width, self.image_height);
+    pub fn render(&self, world: &dyn Hittable, filename: &str) -> io::Result<()> {
+        let mut file = File::create(filename)?;
+        
+        writeln!(file, "P3\n{} {}\n255", self.image_width, self.image_height)?;
 
         for j in 0..self.image_height {
             info!("Scanlines remaining: {}", self.image_height - j);
             for i in 0..self.image_width {
                 let mut pixel_color: Vec3 = Vec3::new(0.0, 0.0, 0.0);
                 for _sample in 0..self.samples_per_pixel {
-                    let r: Ray = self.get_ray(i,j);
+                    let r: Ray = self.get_ray(i, j);
                     pixel_color = pixel_color + ray_color(&r, world, self.depth);
                 }
 
-                write_color(&mut io::stdout(), &(self.pixel_samples_scale * pixel_color))?;
+                write_color(&mut file, &(self.pixel_samples_scale * pixel_color))?;
             }
         }
         Ok(())
@@ -118,8 +121,9 @@ pub fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
         return Color::new(0.0, 0.0, 0.0);
     }
 
-    if world.hit(r, Interval::new(0.0001, INFINITY), &mut rec) {
-        let direction = Vec3::random_on_hemisphere(&rec.normal);
+    if world.hit(r, Interval::new(0.001, INFINITY), &mut rec) {
+        // Lambertian scattering distribution
+        let direction = rec.normal + Vec3::random_on_hemisphere(&rec.normal);
         return 0.5 * ray_color(&Ray::new(rec.p, direction), world, depth - 1);
     }
 

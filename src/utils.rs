@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 use std::sync::Arc;
-use rand::Rng;
+use fastrand;
 
 // Constants
 
@@ -17,15 +17,13 @@ pub fn degrees_to_radians(degrees: f64) -> f64 {
 /// Returns a random real in [0, 1).
 #[inline(always)]
 pub fn random_double() -> f64 {
-    let mut rng = rand::thread_rng();
-    rng.gen::<f64>()
+    fastrand::f64()
 }
 
 /// Returns a random real in [min, max).
 #[inline(always)]
 pub fn random_double_range(min: f64, max: f64) -> f64 {
-    let mut rng = rand::thread_rng();
-    rng.gen_range(min..max)
+    fastrand::f64() * (max - min) + min
 }
 
 // Alias for common types

@@ -29,7 +29,7 @@ fn main() -> io::Result<()> {
 
     // Image
     let aspect_ratio: f64 = 16.0 / 9.0;
-    let image_width: i32 = 800;
+    let image_width: i32 = 720;
 
     // World
     let mut world = HittableList::new();
@@ -37,6 +37,6 @@ fn main() -> io::Result<()> {
     world.add(Arc::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
     world.add(Arc::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
 
-    let cam: Camera = Camera::new(16.0/9.0, 400);
-    cam.render(&world)
+    let cam: Camera = Camera::new(aspect_ratio, image_width);
+    cam.render(&world, "output.ppm")
 }
