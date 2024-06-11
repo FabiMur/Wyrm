@@ -124,7 +124,7 @@ pub fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
     if world.hit(r, Interval::new(0.001, INFINITY), &mut rec) {
         // Lambertian scattering distribution
         let direction = rec.normal + Vec3::random_on_hemisphere(&rec.normal);
-        return 0.5 * ray_color(&Ray::new(rec.p, direction), world, depth - 1);
+        return 0.1 * ray_color(&Ray::new(rec.p, direction), world, depth - 1);
     }
 
     let unit_direction = r.direction().unit_vector();

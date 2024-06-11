@@ -16,6 +16,6 @@ fastrand = "1.7.0"
 criterion = "0.3"
 
 [[bench]]
-name = "random"
+name = "render"
 harness = false
 
