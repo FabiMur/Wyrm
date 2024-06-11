@@ -2,8 +2,8 @@ use crate::vec3::Vec3;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Ray {
-    orig: Vec3,
-    dir: Vec3,
+    pub orig: Vec3,
+    pub dir: Vec3,
 }
 
 impl Ray {
@@ -24,7 +24,7 @@ impl Ray {
 
     // Public method to calculate a point t distance in de direction of the ray
     pub fn at(&self, t: f64) -> Vec3 {
-        self.orig + self.dir * t
+        self.orig + t * self.dir
     }
 }
 

@@ -1,6 +1,6 @@
-use std::ops::{Add, Sub, Mul, Div, Index, IndexMut};
+use std::ops::{Add, Sub, Mul, Div, Neg, Index, IndexMut};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -16,8 +16,12 @@ impl Vec3 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
 
+    pub fn length_squared(&self) -> f64 {
+        self.x * self.x + self.y * self.y + self.z * self.z
+    }
+
     pub fn dot(&self, other: &Self) -> f64 {
-        self.x * other.x + self.y * other.y + self.z * self.z
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
 
     pub fn cross(&self, other: &Self) -> Self {
@@ -39,18 +43,6 @@ impl Vec3 {
 
     pub fn unit_vector(&self) -> Self {
         *self / self.length()
-    }
-
-    pub fn x(&self) -> f64 {
-        self.x
-    }
-
-    pub fn y(&self) -> f64 {
-        self.y
-    }
-
-    pub fn z(&self) -> f64 {
-        self.z
     }
 }
 
@@ -78,30 +70,6 @@ impl Sub for Vec3 {
     }
 }
 
-impl Sub<&Vec3> for Vec3 {
-    type Output = Self;
-
-    fn sub(self, other: &Vec3) -> Self {
-        Self {
-            x: self.x - other.x,
-            y: self.y - other.y,
-            z: self.z - other.z,
-        }
-    }
-}
-
-impl Sub<Vec3> for &Vec3 {
-    type Output = Vec3;
-
-    fn sub(self, other: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x - other.x,
-            y: self.y - other.y,
-            z: self.z - other.z,
-        }
-    }
-}
-
 impl Mul<f64> for Vec3 {
     type Output = Self;
 
@@ -114,6 +82,7 @@ impl Mul<f64> for Vec3 {
     }
 }
 
+// Implementación del operador `*` para multiplicación escalar (f64 * Vec3)
 impl Mul<Vec3> for f64 {
     type Output = Vec3;
 
@@ -138,14 +107,14 @@ impl Div<f64> for Vec3 {
     }
 }
 
-impl Div<Vec3> for f64 {
-    type Output = Vec3;
+impl Neg for Vec3 {
+    type Output = Self;
 
-    fn div(self, vector: Vec3) -> Vec3 {
-        Vec3 {
-            x: vector.x / self,
-            y: vector.y / self,
-            z: vector.z / self,
+    fn neg(self) -> Self::Output {
+        Self {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
         }
     }
 }
@@ -186,6 +155,5 @@ pub fn unit_vector(v: &Vec3) -> Vec3 {
     v.unit_vector()
 }
 
-
-
 pub type Point3 = Vec3;
+pub type Color = Vec3;

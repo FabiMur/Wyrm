@@ -1,45 +1,58 @@
+#![allow(unused)]
+
+mod vec3;
+mod color;
+mod ray;
+mod utils;
+mod hittable;
+mod hittable_list;
+mod sphere;
+
+use in_one_weekend::utils::INFINITY;
 use log::info;
-use in_one_weekend::color::{Color, write_color};
-use in_one_weekend::ray::Ray;
-use in_one_weekend::vec3::{Vec3, Point3, dot, unit_vector};
 use std::cmp::max;
 use std::io::{self};
 use env_logger;
+use vec3::{Vec3, Point3};
+use hittable::{HitRecord, Hittable};
+use hittable_list::{HittableList};
+use sphere::Sphere;
+use color::{Color, write_color};
+use ray::Ray;
+use std::sync::Arc;
 
-fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> f64{
-    let oc: Vec3 = center - r.origin();
-    let a: f64 = dot(&r.direction(), &r.direction());
-    let b: f64 = -2.0 * dot(&r.direction(), &oc);
-    let c: f64 = dot(&oc, &oc) - radius * radius;
-    let discriminant: f64 = b*b - 4.0*a*c;
-
-    if discriminant < 0.0 {
-        return -1.0;
-    } else {
-        return (-b -f64::sqrt(discriminant)) / (2.0*a);
-    }
-}
-
-fn ray_color(r: &Ray) -> Color {
-    let t:f64 = hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, r);
-    if t > 0.0 {
-        let normal: Vec3 = unit_vector(&(r.at(t) - Vec3::new(0.0, 0.0, -1.0)));
-        return 0.5 * Color::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0);
+fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
+    let mut rec = HitRecord::default();
+    if world.hit(r, 0.001, INFINITY, &mut rec) {
+        return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
     }
 
     let unit_direction = r.direction().unit_vector();
-    let a = 0.5 * (unit_direction.y + 1.0);
-    (1.0-a) * Color::new(1.0, 1.0, 1.0) + a*Color::new(0.5, 0.7, 1.0)
+    let t = 0.5 * (unit_direction.y + 1.0);
+    (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
+    //Color::new(0.0, 0.0, 0.0)
 }
+
 
 fn main() -> io::Result<()> {
     env_logger::init();
 
+    // Image
     let aspect_ratio: f64 = 16.0 / 9.0;
     let image_width: i32 = 400;
 
+    // Calculate the image height, and ensure it's at least 1
     let image_height: i32 = max ((image_width as f64 / aspect_ratio) as i32, 1);
 
+    // World
+    let mut world = HittableList::new();
+    
+    world.add(Arc::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Arc::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
+    //world.add(Arc::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
+    //world.add(Arc::new(Sphere::new(Point3::new(0.0, 100.5, -1.0), 100.0)));
+
+    // Camera
     let focal_length: f64 = 1.0;
     let viewport_height: f64 = 2.0;
     let viewport_width: f64 = viewport_height * (image_width as f64 / image_height as f64);
@@ -66,7 +79,7 @@ fn main() -> io::Result<()> {
     
     println!("P3\n{} {}\n255", image_width, image_height);
 
-    for j in (0..image_height).rev() {
+    for j in (0..image_height) {
         info!("Scanlines remaining: {}", image_height - j);
         for i in 0..image_width {
             // Calculate the center of the pixel center moving i times to the right and 
@@ -76,7 +89,7 @@ fn main() -> io::Result<()> {
             let ray_direction: Vec3 = pixel_center - camera_center;
             let r: Ray = Ray::new(camera_center, ray_direction);
 
-            let pixel_color: Color = ray_color(&r);
+            let pixel_color: Color = ray_color(&r, &world);
 
             write_color(&mut io::stdout(), &pixel_color)?;
         }
