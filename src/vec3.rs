@@ -180,5 +180,12 @@ pub fn dot(v: &Vec3, w: &Vec3) -> f64 {
     v.dot(w)
 }
 
+// Wrapper for unit_vector method
+#[inline(always)]
+pub fn unit_vector(v: &Vec3) -> Vec3 {
+    v.unit_vector()
+}
+
+
 
 pub type Point3 = Vec3;

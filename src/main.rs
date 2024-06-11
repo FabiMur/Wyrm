@@ -1,23 +1,30 @@
 use log::info;
 use in_one_weekend::color::{Color, write_color};
 use in_one_weekend::ray::Ray;
-use in_one_weekend::vec3::{Vec3, Point3, dot};
+use in_one_weekend::vec3::{Vec3, Point3, dot, unit_vector};
 use std::cmp::max;
 use std::io::{self};
 use env_logger;
 
-fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> bool{
+fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> f64{
     let oc: Vec3 = center - r.origin();
     let a: f64 = dot(&r.direction(), &r.direction());
     let b: f64 = -2.0 * dot(&r.direction(), &oc);
     let c: f64 = dot(&oc, &oc) - radius * radius;
     let discriminant: f64 = b*b - 4.0*a*c;
-    discriminant >= 0.0
+
+    if discriminant < 0.0 {
+        return -1.0;
+    } else {
+        return (-b -f64::sqrt(discriminant)) / (2.0*a);
+    }
 }
 
 fn ray_color(r: &Ray) -> Color {
-    if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, r) {
-        return Color::new(1.0, 0.0, 0.0);
+    let t:f64 = hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, r);
+    if t > 0.0 {
+        let normal: Vec3 = unit_vector(&(r.at(t) - Vec3::new(0.0, 0.0, -1.0)));
+        return 0.5 * Color::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0);
     }
 
     let unit_direction = r.direction().unit_vector();
