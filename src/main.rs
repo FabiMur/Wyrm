@@ -29,7 +29,7 @@ fn main() -> io::Result<()> {
 
     // Image
     let aspect_ratio: f64 = 16.0 / 9.0;
-    let image_width: i32 = 400;
+    let image_width: i32 = 800;
 
     // World
     let mut world = HittableList::new();
