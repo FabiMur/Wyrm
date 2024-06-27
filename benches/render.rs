@@ -1,4 +1,3 @@
-use std::result;
 use std::sync::Arc;
 
 use criterion::{criterion_group, criterion_main, Criterion};
