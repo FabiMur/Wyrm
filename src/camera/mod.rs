@@ -1,13 +1,14 @@
-use crate::utils::{INFINITY, random_double};
-use crate::vec3::{Point3, Vec3, Color};
-use crate::ray::{Ray};
-use crate::hittable::{HitRecord, Hittable};
-use crate::color::write_color;
 use std::cmp::max;
 use std::fs::File;
 use std::io::{self, Write};
 use log::info;
-use crate::interval::Interval;
+
+use crate::primitives::vec3::{Point3, Vec3, Color};
+use crate::primitives::ray::Ray;
+use crate::primitives::color::write_color;
+use crate::primitives::interval::Interval;
+use crate::hittable::{HitRecord, Hittable};
+use crate::utils::{INFINITY, random_double};
 
 pub struct Camera {
     pub aspect_ratio: f64,

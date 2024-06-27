@@ -1,6 +1,6 @@
-use crate::ray::Ray;
-use crate::vec3::{Vec3, dot};
-use crate::interval::Interval;
+use crate::primitives::ray::Ray;
+use crate::primitives::vec3::{Vec3, dot};
+use crate::primitives::interval::Interval;
 
 #[derive(Clone, Default)]
 pub struct HitRecord {

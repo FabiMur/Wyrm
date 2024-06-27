@@ -1,26 +1,16 @@
 #![allow(unused)]
 
-mod vec3;
-mod color;
-mod ray;
-mod utils;
-mod hittable;
-mod hittable_list;
-mod sphere;
-mod camera;
-mod interval;
-
-use in_one_weekend::utils::INFINITY;
-use log::info;
-use std::cmp::max;
 use std::io::{self};
 use env_logger;
-use vec3::{Vec3, Point3};
-use hittable::{HitRecord, Hittable};
-use hittable_list::{HittableList};
-use sphere::Sphere;
-use color::{Color, write_color};
-use ray::Ray;
+
+mod camera;
+mod hittable;
+mod utils;
+mod primitives;
+
+use primitives::vec3::Point3;
+use hittable::hittable_list::{HittableList};
+use primitives::sphere::Sphere;
 use std::sync::Arc;
 use camera::Camera;
 

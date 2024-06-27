@@ -1,7 +1,7 @@
 use crate::hittable::{Hittable, HitRecord};
-use crate::interval::Interval;
-use crate::ray::Ray;
-use crate::vec3::{Point3, Vec3};
+use crate::primitives::interval::Interval;
+use crate::primitives::ray::Ray;
+use crate::primitives::vec3::{Point3, Vec3};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Sphere {
