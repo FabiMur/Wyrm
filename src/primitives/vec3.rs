@@ -82,6 +82,12 @@ impl Vec3 {
     pub fn unit_vector(&self) -> Self {
         *self / self.length()
     }
+
+    pub fn near_zero(&self) -> bool {
+        let s: f64 = 1e-8;
+        self[0].abs() < s &&  self[0].abs() < s && self[2].abs() < s
+    }
+
 }
 
 impl Add for Vec3 {
@@ -108,6 +114,18 @@ impl Sub for Vec3 {
     }
 }
 
+impl Mul for Vec3 {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self {
+        Self {
+            x: self.x * other.x,
+            y: self.y * other.y,
+            z: self.z * other.z,
+        }
+    }
+}
+
 impl Mul<f64> for Vec3 {
     type Output = Self;
 
@@ -120,7 +138,6 @@ impl Mul<f64> for Vec3 {
     }
 }
 
-// Implementación del operador `*` para multiplicación escalar (f64 * Vec3)
 impl Mul<Vec3> for f64 {
     type Output = Vec3;
 
@@ -181,6 +198,23 @@ impl IndexMut<usize> for Vec3 {
     }
 }
 
+// Reflects a vector 'v' around a normal vector 'n' using the 
+// reflection formula: r = v - 2 * (dot(v, n) * n).
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    *v - (2.0*dot(v, n) * *n)
+}
+
+// Computes the refraction of a vector 'uv' through a surface with normal 'n'
+// according to Snell's law.
+pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
+    let neg_uv: Vec3 = - *uv;
+    let cos_theta = f64::min(dot(&neg_uv, n), 1.0);
+    let r_out_perp: Vec3 = etai_over_etat * (*uv + cos_theta * *n);
+    let r_out_parallel = -f64::sqrt(f64::abs(1.0 - r_out_perp.length_squared())) * *n;
+    
+    r_out_perp + r_out_parallel
+}
+
 // Wrapper for dot method
 #[inline(always)]
 pub fn dot(v: &Vec3, w: &Vec3) -> f64 {
@@ -194,4 +228,3 @@ pub fn unit_vector(v: &Vec3) -> Vec3 {
 }
 
 pub type Point3 = Vec3;
-pub type Color = Vec3;

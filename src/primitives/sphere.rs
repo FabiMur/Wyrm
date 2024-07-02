@@ -1,17 +1,17 @@
 use crate::hittable::{Hittable, HitRecord};
-use crate::primitives::interval::Interval;
-use crate::primitives::ray::Ray;
-use crate::primitives::vec3::{Point3, Vec3};
+use crate::materials::MaterialArcWrapper;
+use crate::primitives::*;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Clone)]
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
+    pub mat: MaterialArcWrapper, // Use MaterialArcWrapper directly
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Self {
-        Sphere { center, radius }
+    pub fn new(center: Point3, radius: f64, mat: MaterialArcWrapper) -> Self {
+        Sphere { center, radius, mat }
     }
 }
 
@@ -27,21 +27,25 @@ impl Hittable for Sphere {
             let sqrtd = discriminant.sqrt();
 
             // Find the nearest root that lies in the acceptable range.
-            let root = (-half_b - sqrtd) / a;
+            let mut root = (-half_b - sqrtd) / a;
             if root < ray_t.max && root > ray_t.min {
                 rec.t = root;
                 rec.p = r.at(rec.t);
                 let outward_normal = (rec.p - self.center) / self.radius;
                 rec.set_face_normal(r, outward_normal);
+                rec.mat = Some(self.mat.clone());
+
                 return true;
             }
 
-            let root = (-half_b + sqrtd) / a;
+            root = (-half_b + sqrtd) / a;
             if root < ray_t.max && root > ray_t.min {
                 rec.t = root;
                 rec.p = r.at(rec.t);
                 let outward_normal = (rec.p - self.center) / self.radius;
                 rec.set_face_normal(r, outward_normal);
+                rec.mat = Some(self.mat.clone());
+
                 return true;
             }
         }

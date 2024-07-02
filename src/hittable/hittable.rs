@@ -1,11 +1,10 @@
-use crate::primitives::ray::Ray;
-use crate::primitives::vec3::{Vec3, dot};
-use crate::primitives::interval::Interval;
-
-#[derive(Clone, Default)]
+use crate::materials::MaterialArcWrapper;
+use crate::primitives::*;
+#[derive(Default, Clone)]
 pub struct HitRecord {
     pub p: Vec3,
     pub normal: Vec3,
+    pub mat: Option<MaterialArcWrapper>,  // Use Option to allow uninitialized material
     pub t: f64,
     pub front_face: bool,
 }
