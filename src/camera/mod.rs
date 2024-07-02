@@ -3,45 +3,57 @@ use std::fs::File;
 use std::io::{self, Write};
 use log::info;
 
-use crate::primitives::vec3::{Point3, Vec3, Color};
+use crate::primitives::vec3::{Point3, Vec3};
 use crate::primitives::ray::Ray;
-use crate::primitives::color::write_color;
+use crate::primitives::color::{Color, write_color};
 use crate::primitives::interval::Interval;
 use crate::hittable::{HitRecord, Hittable};
-use crate::utils::{INFINITY, random_double};
+use crate::utils::{INFINITY, random_double, degrees_to_radians};
+use crate::vec3::*;
 
 pub struct Camera {
-    pub aspect_ratio: f64,
     pub image_width: i32,
     pub image_height: i32,
     pub center: Point3,
+
     pub pixel00_loc: Point3,
     pub pixel_delta_u: Vec3,
     pub pixel_delta_v: Vec3,
+
     pub samples_per_pixel: i32,
     pub pixel_samples_scale: f64,
     pub depth: i32,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: i32) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: i32, vfov: f64, lookfrom: Point3, lookat: Point3, vup: Vec3) -> Self {
+
         // Calculate the image height, and ensure it's at least 1
         let image_height = max((image_width as f64 / aspect_ratio) as i32, 1);
 
-        let center = Point3::new(0.0, 0.0, 0.0);
+        //
+        let center = lookfrom;
 
         // Viewport dimensions
-        let focal_length: f64 = 1.0;
-        let viewport_height: f64 = 2.0;
+        let focal_length: f64 = (lookfrom - lookat). length();
+        let theta: f64 = degrees_to_radians(vfov);
+        let h:f64 = f64::tan(theta/2.0);
+        let viewport_height: f64 = 2.0 * h * focal_length;
         let viewport_width: f64 = viewport_height * aspect_ratio;
 
-        // viewport_u represents the "horizontal component" of the viewport.
-        // In the viewport plane it goes to the right.
-        let viewport_u: Vec3 = Vec3::new(viewport_width, 0.0, 0.0);
+        // Calculate u, v and w (The unit basis vectors for the camera)
+        let w: Vec3 = lookfrom - lookat;
+        let w = w.unit_vector();
 
-        // viewport_v represents the "vertical component" of the viewport.
-        // In the viewport plane it goes downwards.
-        let viewport_v: Vec3 = Vec3::new(0.0, -viewport_height, 0.0);
+        let u: Vec3 = cross(&vup, &w);
+        let u = unit_vector(&u);
+
+        let v: Vec3 = cross(&w, &u);
+
+        // Calculate the vectors across the horizontal and down the vertical viewport edges.
+        // Vector across viewport horizontal edge
+        let viewport_u: Vec3 = viewport_width * u;
+        let viewport_v: Vec3 = viewport_height * -v;
 
         // The horizontal and vertical vectors ("distance") from pixel to pixel.
         let pixel_delta_u = viewport_u / image_width as f64;
@@ -50,7 +62,7 @@ impl Camera {
         // Calculate the location of the upper left pixel moving (focal_length) units towards the camera
         // then moving half of the viewport width to the left and half of the viewport height upwards.
         let viewport_upper_left: Point3 = center
-            - Vec3::new(0.0, 0.0, focal_length)
+            - focal_length * w
             - viewport_u / 2.0
             - viewport_v / 2.0;
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
@@ -60,10 +72,9 @@ impl Camera {
         let pixel_samples_scale: f64 = 1.0 / samples_per_pixel as f64;
 
         // How many bounces is a given ray allowd to do
-        let depth: i32 = 50;
+        let depth: i32 = 10;
 
         Self {
-            aspect_ratio,
             image_width,
             image_height,
             center,
@@ -118,19 +129,27 @@ fn sample_square() -> Vec3 {
 pub fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
     let mut rec = HitRecord::default();
     if depth <= 0 {
-        // Si hemos alcanzado el límite de profundidad, devolvemos negro
+        // If we have exceeded the ray bounce limit, no more light is scattered.
         return Color::new(0.0, 0.0, 0.0);
     }
 
     if world.hit(r, Interval::new(0.001, INFINITY), &mut rec) {
-        // Lambertian scattering distribution
-        let direction = rec.normal + Vec3::random_on_hemisphere(&rec.normal);
-        return 0.1 * ray_color(&Ray::new(rec.p, direction), world, depth - 1);
+        let mut scattered = Ray::default();  // Initialize with default value
+        let mut attenuation = Color::new(0.0, 0.0, 0.0);  // Initialize with default value
+        if let Some(material) = &rec.mat {
+            if material.scatter(r, &rec, &mut attenuation, &mut scattered) {
+                return attenuation * ray_color(&scattered, world, depth - 1);
+            }
+        }
+
+        return Color::new(0.0, 0.0, 0.0);
     }
 
     let unit_direction = r.direction().unit_vector();
     let t = 0.5 * (unit_direction.y + 1.0);
     (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }
+
+
 
 

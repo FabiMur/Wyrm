@@ -4,6 +4,7 @@ use crate::hittable::HitRecord;
 use crate::materials::{Material, MaterialArcWrapper};
 use crate::primitives::Vec3;
 
+// Specular Materials
 pub struct Metal {
     albedo: Color,
     fuzz: f64,

@@ -221,6 +221,12 @@ pub fn dot(v: &Vec3, w: &Vec3) -> f64 {
     v.dot(w)
 }
 
+// Wrapper for cross method
+#[inline(always)]
+pub fn cross(v: &Vec3, w: &Vec3) -> Vec3 {
+    v.cross(w)
+}
+
 // Wrapper for unit_vector method
 #[inline(always)]
 pub fn unit_vector(v: &Vec3) -> Vec3 {
