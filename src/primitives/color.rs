@@ -1,5 +1,4 @@
 use std::io::{self, Write};
-use crate::Point3;
 use crate::primitives::vec3::Vec3;
 use crate::primitives::interval::Interval;
 use crate::utils::random_double;
