@@ -1,10 +1,11 @@
 use std::io::{self, Write};
+use crate::Point3;
 use crate::primitives::vec3::Vec3;
 use crate::primitives::interval::Interval;
+use crate::utils::random_double;
 
 pub type Color = Vec3;
 
-#[inline(always)]
 pub fn linear_to_gamma(linear_component: f64) -> f64 {
     if linear_component > 0.0 {
         return linear_component.sqrt()
@@ -13,7 +14,6 @@ pub fn linear_to_gamma(linear_component: f64) -> f64 {
     return 0.0
 }
 
-#[inline(always)]
 pub fn write_color<W: Write>(out: &mut W, pixel_color: &Color) -> io::Result<()> {
     let mut r = pixel_color.x;
     let mut g = pixel_color.y;
@@ -32,4 +32,8 @@ pub fn write_color<W: Write>(out: &mut W, pixel_color: &Color) -> io::Result<()>
 
     // Escribir los componentes del color del píxel.
     writeln!(out, "{} {} {}", rbyte, gbyte, bbyte)
+}
+
+pub fn random() -> Color {
+    Color::new(random_double(), random_double(), random_double())
 }
