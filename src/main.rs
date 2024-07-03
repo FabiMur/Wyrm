@@ -22,7 +22,7 @@ fn main() {
     // Camera settings
     let aspect_ratio: f64 = 16.0 / 9.0;
     let image_width: i32 = 400;
-    let vfov: f64 = 90.0;
+    let vfov: f64 = 20.0;
     let lookfrom: Point3 = Point3::new(-2.0, 2.0, 1.0);
     let lookat: Point3 = Point3::new(0.0, 0.0, -1.0);
     let vup: Point3 = Point3::new(0.0, 1.0, 0.0);
@@ -42,7 +42,7 @@ fn main() {
     world.add(Arc::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.4, material_bubble)));
     world.add(Arc::new(Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, material_right)));
 
-    let mut cam: Camera = Camera::new(aspect_ratio, image_width, vfov, lookfrom, lookat, vup);
+    let mut cam: Camera = Camera::new(aspect_ratio, image_width, vfov, lookfrom, lookat, vup, 10.0 ,3.4);
 
     cam.render(&world, "output.ppm");
 }
