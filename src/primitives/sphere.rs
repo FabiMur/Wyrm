@@ -1,22 +1,26 @@
 use crate::hittable::{Hittable, HitRecord};
 use crate::materials::MaterialArcWrapper;
 use crate::primitives::*;
+use crate::bvh::AABBox;
 
 #[derive(Clone)]
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
-    pub mat: MaterialArcWrapper, // Use MaterialArcWrapper directly
+    pub mat: MaterialArcWrapper,
+    pub bbox: AABBox,
 }
 
 impl Sphere {
     pub fn new(center: Point3, radius: f64, mat: MaterialArcWrapper) -> Self {
-        Sphere { center, radius, mat }
+        let rvec = Vec3 { x: radius, y: radius, z: radius};
+        let bbox = AABBox::new_from_points(&(center - rvec), &(center + rvec));
+        Sphere { center, radius, mat , bbox}
     }
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
         let oc = r.origin() - self.center;
         let a = r.direction().length_squared();
         let half_b = Vec3::dot(&r.direction(), &oc);
@@ -51,4 +55,9 @@ impl Hittable for Sphere {
         }
         false
     }
+
+    fn bounding_box(&self) -> AABBox {
+        self.bbox
+    }
+
 }

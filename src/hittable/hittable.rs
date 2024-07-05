@@ -1,5 +1,6 @@
 use crate::materials::MaterialArcWrapper;
 use crate::primitives::*;
+use crate::bvh::AABBox;
 #[derive(Default, Clone)]
 pub struct HitRecord {
     pub p: Vec3,
@@ -21,5 +22,7 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
+    fn hit(&self, r: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool;
+
+    fn bounding_box(&self) -> AABBox;
 }

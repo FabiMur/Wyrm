@@ -1,7 +1,6 @@
 use std::cmp::max;
 use std::fs::File;
-use std::io::{self, Write};
-use log::info;
+use std::io::{self, Write, stdout};
 
 use crate::primitives::vec3::{Point3, Vec3};
 use crate::primitives::ray::Ray;
@@ -82,11 +81,11 @@ impl Camera {
         let defocus_v = v * defocus_radius;
 
         // Samples per pixel used for antialiasing
-        let samples_per_pixel: i32 = 100;
+        let samples_per_pixel: i32 = 50;
         let pixel_samples_scale: f64 = 1.0 / samples_per_pixel as f64;
 
         // How many bounces is a given ray allowd to do
-        let depth: i32 = 10;
+        let depth: i32 = 7;
 
         Self {
             image_width,
@@ -110,7 +109,7 @@ impl Camera {
         writeln!(file, "P3\n{} {}\n255", self.image_width, self.image_height)?;
 
         for j in 0..self.image_height {
-            info!("Scanlines remaining: {}", self.image_height - j);
+            print!("\rScanlines remaining: {}", self.image_height - j);
             for i in 0..self.image_width {
                 let mut pixel_color: Vec3 = Vec3::new(0.0, 0.0, 0.0);
                 for _sample in 0..self.samples_per_pixel {
@@ -120,6 +119,8 @@ impl Camera {
 
                 write_color(&mut file, &(self.pixel_samples_scale * pixel_color))?;
             }
+
+            stdout().flush().unwrap();
         }
         Ok(())
     }
@@ -139,7 +140,7 @@ impl Camera {
         }
         let ray_direction: Vec3 = pixel_sample - ray_origin;
     
-        return Ray::new(ray_origin, ray_direction);
+        Ray::new(ray_origin, ray_direction)
     }
 
     // Returns a random point in the camera defocus disk.
@@ -160,10 +161,10 @@ pub fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
     let mut rec = HitRecord::default();
     if depth <= 0 {
         // If we have exceeded the ray bounce limit, no more light is scattered.
-        return Color::new(0.0, 0.0, 0.0);
+        return Color::new(0.0, 0.0, 0.0)
     }
 
-    if world.hit(r, Interval::new(0.001, INFINITY), &mut rec) {
+    if world.hit(r, &mut Interval::new(0.001, INFINITY), &mut rec) {
         let mut scattered = Ray::default();  // Initialize with default value
         let mut attenuation = Color::new(0.0, 0.0, 0.0);  // Initialize with default value
         if let Some(material) = &rec.mat {

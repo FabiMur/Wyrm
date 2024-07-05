@@ -7,12 +7,20 @@ pub struct Interval {
 }
 
 impl Interval {
-    // Default interval is empty
+    // Main constructor
     pub fn new(min: f64, max: f64) -> Self {
         Interval {
             min: min,
             max: max,
         }
+    }
+
+    // Constructor from 2 intervals, encloses both
+    pub fn new_from_aabboxs(a: &Self, b: &Self) -> Self {
+        let min = if a.min <= b.min {a.min} else {b.min};
+        let max = if a.max >= b.max {a.max} else {b.max};
+
+        Self { min, max }
     }
 
     // Size of the interval
@@ -48,12 +56,21 @@ impl Interval {
 
     pub fn clamp(&self, x: f64) -> f64 {
         if x < self.min {
-            return self.min;
+            self.min
         } else if x > self.max {
-            return self.max;
+            self.max
         } else{
-            return x;
+            x
+        }
+    }
+
+    pub fn expand(&self, delta: f64) -> Self {
+        let padding = delta/2.0;
+        Interval { 
+            min: self.min - padding,
+            max: self.max + padding
         }
     }
     
 }
+
