@@ -2,7 +2,6 @@ use std::sync::Arc;
 use crate::hittable::{Hittable, HitRecord};
 use crate::primitives::*;
 use crate::bvh::AABBox;
-use crate::utils::*;
 use std::cmp::Ordering;
 
 pub struct BVHNode {
@@ -13,7 +12,15 @@ pub struct BVHNode {
 
 impl BVHNode {
     pub fn new(mut objects: Vec<Arc<dyn Hittable>>, start: usize, end: usize) -> Self { 
-        let axis: i32 = random_integer_range(0, 2);
+        
+        
+        let mut bbox = AABBox::new_empty();
+        for object_index in start..end {
+            bbox = AABBox::new_from_aabboxs(&bbox,&objects[object_index].bounding_box());
+        }
+        
+        let axis = bbox.longest_axis();
+            
         let comparator = if axis == 0 {
             box_x_compare
         } else if axis == 1 {
@@ -39,8 +46,6 @@ impl BVHNode {
             let right = Arc::new(BVHNode::new(objects, mid, end)) as Arc<dyn Hittable>;
             (left, right)
         };
-
-        let bbox = AABBox::new_from_aabboxs(&left.bounding_box(), &right.bounding_box());
 
         BVHNode { bbox, left, right }
     }

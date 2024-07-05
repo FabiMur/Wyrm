@@ -53,6 +53,21 @@ impl AABBox {
         }
     }
 
+    // Implement the longest_axis method
+    pub fn longest_axis(&self) -> usize {
+        let x_length = self.x.max - self.x.min;
+        let y_length = self.y.max - self.y.min;
+        let z_length = self.z.max - self.z.min;
+
+        if x_length > y_length && x_length > z_length {
+            0
+        } else if y_length > z_length {
+            1
+        } else {
+            2
+        }
+    }
+
     pub fn hit(&self, r: &Ray, ray_t: &mut Interval) -> bool {
         let mut tmin = ray_t.min;
         let mut tmax = ray_t.max;
