@@ -81,11 +81,11 @@ impl Camera {
         let defocus_v = v * defocus_radius;
 
         // Samples per pixel used for antialiasing
-        let samples_per_pixel: i32 = 50;
+        let samples_per_pixel: i32 = 70;
         let pixel_samples_scale: f64 = 1.0 / samples_per_pixel as f64;
 
         // How many bounces is a given ray allowd to do
-        let depth: i32 = 7;
+        let depth: i32 = 10;
 
         Self {
             image_width,

@@ -6,21 +6,18 @@ use std::cmp::Ordering;
 
 pub struct BVHNode {
     pub bbox: AABBox,
-    pub left: Arc<dyn Hittable>,
-    pub right: Arc<dyn Hittable>,
+    pub left: Arc<dyn Hittable + Send + Sync>,
+    pub right: Arc<dyn Hittable + Send + Sync>,
 }
 
 impl BVHNode {
-    pub fn new(mut objects: Vec<Arc<dyn Hittable>>, start: usize, end: usize) -> Self { 
-        
-        
+    pub fn new(mut objects: Vec<Arc<dyn Hittable + Send + Sync>>, start: usize, end: usize) -> Self {
         let mut bbox = AABBox::new_empty();
         for object_index in start..end {
-            bbox = AABBox::new_from_aabboxs(&bbox,&objects[object_index].bounding_box());
+            bbox = AABBox::new_from_aabboxs(&bbox, &objects[object_index].bounding_box());
         }
-        
+
         let axis = bbox.longest_axis();
-            
         let comparator = if axis == 0 {
             box_x_compare
         } else if axis == 1 {
@@ -42,8 +39,8 @@ impl BVHNode {
         } else {
             objects[start..end].sort_by(|a, b| comparator(a, b));
             let mid = start + object_span / 2;
-            let left = Arc::new(BVHNode::new(objects.clone(), start, mid)) as Arc<dyn Hittable>;
-            let right = Arc::new(BVHNode::new(objects, mid, end)) as Arc<dyn Hittable>;
+            let left = Arc::new(BVHNode::new(objects.clone(), start, mid)) as Arc<dyn Hittable + Send + Sync>;
+            let right = Arc::new(BVHNode::new(objects, mid, end)) as Arc<dyn Hittable + Send + Sync>;
             (left, right)
         };
 
@@ -53,20 +50,17 @@ impl BVHNode {
 
 impl Hittable for BVHNode {
     fn hit(&self, r: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
-        // Check if the ray hits the bounding box
         if !self.bbox.hit(r, ray_t) {
             return false;
         }
 
         let mut hit_anything = false;
 
-        // Check if the ray hits the left child
         if self.left.hit(r, ray_t, rec) {
             hit_anything = true;
             *ray_t = Interval { min: ray_t.min, max: rec.t };
         }
 
-        // Check if the ray hits the right child with the updated interval
         if self.right.hit(r, ray_t, rec) {
             hit_anything = true;
         }
@@ -79,22 +73,21 @@ impl Hittable for BVHNode {
     }
 }
 
-
-fn box_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis_index: i32) -> Ordering {
+fn box_compare(a: &Arc<dyn Hittable + Send + Sync>, b: &Arc<dyn Hittable + Send + Sync>, axis_index: i32) -> Ordering {
     let a_axis_interval = a.bounding_box().axis_interval(axis_index as usize);
     let b_axis_interval = b.bounding_box().axis_interval(axis_index as usize);
 
     a_axis_interval.min.partial_cmp(&b_axis_interval.min).unwrap()
 }
 
-fn box_x_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>) -> Ordering {
+fn box_x_compare(a: &Arc<dyn Hittable + Send + Sync>, b: &Arc<dyn Hittable + Send + Sync>) -> Ordering {
     box_compare(a, b, 0)
 }
 
-fn box_y_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>) -> Ordering {
+fn box_y_compare(a: &Arc<dyn Hittable + Send + Sync>, b: &Arc<dyn Hittable + Send + Sync>) -> Ordering {
     box_compare(a, b, 1)
 }
 
-fn box_z_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>) -> Ordering {
+fn box_z_compare(a: &Arc<dyn Hittable + Send + Sync>, b: &Arc<dyn Hittable + Send + Sync>) -> Ordering {
     box_compare(a, b, 2)
 }

@@ -9,6 +9,8 @@ mod utils;
 mod primitives;
 mod materials;
 mod bvh;
+mod textures;
+mod external;
 
 use std::sync::Arc;
 use primitives::*;
@@ -18,19 +20,24 @@ use hittable::hittable_list::{HittableList};
 use primitives::sphere::Sphere;
 use camera::Camera;
 use bvh::*;
+use textures::*;
 
 fn main() {
-    // Create a hittable list and add two spheres
     let mut world = HittableList::new();
 
-    let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    let material_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
+    // Texture inicialization
+    let checker = CheckerTexture::new_from_colors(0.32, Color::new(0.3, 0.3, 0.3), Color::new(0.6,0.6,0.6));
+    let material_ground = Lambertian::new_from_texture(Arc::new(checker));
+    let earth_texture = ImageTexture::new("earthSurface.jpg");
+
+
     let material_left = Dielectric::new(1.5);
+    let material_center = Lambertian::new_from_texture(Arc::new(earth_texture));
     let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
 
     world.add(Arc::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, material_ground)));
-    world.add(Arc::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, material_center)));
     world.add(Arc::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, material_left)));
+    world.add(Arc::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, material_center)));
     world.add(Arc::new(Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, material_right)));
 
     // Build BVH from the world

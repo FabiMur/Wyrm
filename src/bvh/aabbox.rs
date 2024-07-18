@@ -1,6 +1,6 @@
 use crate::primitives::*;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct AABBox {
     pub x: Interval,
     pub y: Interval,
@@ -53,7 +53,7 @@ impl AABBox {
         }
     }
 
-    // Implement the longest_axis method
+    // Longest dimension of the parallelepiped
     pub fn longest_axis(&self) -> usize {
         let x_length = self.x.max - self.x.min;
         let y_length = self.y.max - self.y.min;
@@ -71,7 +71,7 @@ impl AABBox {
     pub fn hit(&self, r: &Ray, ray_t: &mut Interval) -> bool {
         let mut tmin = ray_t.min;
         let mut tmax = ray_t.max;
-    
+
         for axis in 0..3 {
             let inv_d = 1.0 / r.dir[axis];
             let (t0, t1) = if inv_d >= 0.0 {
@@ -85,19 +85,18 @@ impl AABBox {
                     (self.axis_interval(axis).min - r.orig[axis]) * inv_d,
                 )
             };
-    
+
             tmin = tmin.max(t0);
             tmax = tmax.min(t1);
-    
+
             if tmax <= tmin {
                 return false;
             }
         }
-    
+
         ray_t.min = tmin;
         ray_t.max = tmax;
-    
+
         true
     }
-    
 }

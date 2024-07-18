@@ -1,5 +1,5 @@
 use std::ops::{Add, Sub, Mul, Div, Neg, Index, IndexMut};
-use crate::utils::{random_double_range};
+use crate::utils::random_double_range;
 
 #[derive(Debug, Copy, Clone, Default)]
 pub struct Vec3 {

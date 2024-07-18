@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use crate::hittable::{Hittable, HitRecord};
 use crate::materials::MaterialArcWrapper;
 use crate::primitives::*;
@@ -16,6 +18,16 @@ impl Sphere {
         let rvec = Vec3 { x: radius, y: radius, z: radius};
         let bbox = AABBox::new_from_points(&(center - rvec), &(center + rvec));
         Sphere { center, radius, mat , bbox}
+    }
+
+    pub fn get_uv(p: &Point3) -> (f64, f64){
+        let theta: f64 = f64::acos(-p.y);
+        let phi: f64 = f64::atan2(-p.z, p.x) + PI;
+
+        let u: f64 = phi / (2.0 * PI);
+        let v: f64 = theta / PI;
+
+        (u , v)
     }
 }
 
@@ -37,6 +49,7 @@ impl Hittable for Sphere {
                 rec.p = r.at(rec.t);
                 let outward_normal = (rec.p - self.center) / self.radius;
                 rec.set_face_normal(r, outward_normal);
+                (rec.u, rec.v) = Sphere::get_uv(&outward_normal);
                 rec.mat = Some(self.mat.clone());
 
                 return true;

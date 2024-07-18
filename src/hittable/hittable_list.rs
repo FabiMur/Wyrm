@@ -4,7 +4,7 @@ use crate::primitives::*;
 use crate::bvh::AABBox;
 
 pub struct HittableList {
-    pub objects: Vec<Arc<dyn Hittable>>,
+    pub objects: Vec<Arc<dyn Hittable + Send + Sync>>,
     pub bbox: AABBox,
 }
 
@@ -13,7 +13,7 @@ impl HittableList {
         HittableList { objects: Vec::new(), bbox: AABBox::new(Interval::empty(), Interval::universe(), Interval::universe())}
     }
 
-    pub fn add(&mut self, object: Arc<dyn Hittable>) {
+    pub fn add(&mut self, object: Arc<dyn Hittable + Send + Sync>) {
         self.bbox = AABBox::new_from_aabboxs(&self.bbox, &object.bounding_box());
         self.objects.push(object);
     }

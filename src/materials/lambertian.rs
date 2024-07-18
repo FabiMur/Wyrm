@@ -2,15 +2,21 @@ use std::sync::Arc;
 use crate::primitives::*;
 use crate::hittable::HitRecord;
 use crate::materials::{Material, MaterialArcWrapper};
+use crate::textures::{Texture,SolidColor};
 
 // Diffuse Materials using Lambert's Cosine Law
 pub struct Lambertian {
-    pub albedo: Color,
+    pub texture: Arc<dyn Texture>,
 }
 
 impl Lambertian {
     pub fn new(albedo: Color) -> MaterialArcWrapper {
-        MaterialArcWrapper(Arc::new(Lambertian { albedo }) as Arc<dyn Material>)
+        let solid_color_texture = Arc::new(SolidColor::new(albedo)) as Arc<dyn Texture>;
+        MaterialArcWrapper(Arc::new(Lambertian { texture: solid_color_texture }) as Arc<dyn Material>)
+    }
+
+    pub fn new_from_texture(texture: Arc<dyn Texture>) -> MaterialArcWrapper {
+        MaterialArcWrapper(Arc::new(Lambertian { texture }) as Arc<dyn Material>)
     }
 }
 
@@ -26,7 +32,7 @@ impl Material for Lambertian {
             orig: rec.p,
             dir: scatter_direction,
         };
-        *attenuation = self.albedo;
+        *attenuation = self.texture.value(rec.u, rec.v, &rec.p);
         true
     }
 }
