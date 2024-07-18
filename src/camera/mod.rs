@@ -1,6 +1,8 @@
 use std::cmp::max;
 use std::fs::File;
 use std::io::{self, Write, stdout};
+use rayon::prelude::*;
+use indicatif::{ProgressBar, ProgressStyle};
 
 use crate::primitives::vec3::{Point3, Vec3};
 use crate::primitives::ray::Ray;
@@ -9,6 +11,7 @@ use crate::primitives::interval::Interval;
 use crate::hittable::{HitRecord, Hittable};
 use crate::utils::{INFINITY, random_double, degrees_to_radians};
 use crate::vec3::*;
+
 
 pub struct Camera {
     pub image_width: i32,
@@ -81,11 +84,11 @@ impl Camera {
         let defocus_v = v * defocus_radius;
 
         // Samples per pixel used for antialiasing
-        let samples_per_pixel: i32 = 70;
+        let samples_per_pixel: i32 = 700;
         let pixel_samples_scale: f64 = 1.0 / samples_per_pixel as f64;
 
         // How many bounces is a given ray allowd to do
-        let depth: i32 = 10;
+        let depth: i32 = 25;
 
         Self {
             image_width,
@@ -103,28 +106,46 @@ impl Camera {
         }
     }
 
+
     pub fn render(&self, world: &dyn Hittable, filename: &str) -> io::Result<()> {
         let mut file = File::create(filename)?;
-        
         writeln!(file, "P3\n{} {}\n255", self.image_width, self.image_height)?;
 
-        for j in 0..self.image_height {
-            print!("\rScanlines remaining: {}", self.image_height - j);
-            for i in 0..self.image_width {
-                let mut pixel_color: Vec3 = Vec3::new(0.0, 0.0, 0.0);
-                for _sample in 0..self.samples_per_pixel {
-                    let r: Ray = self.get_ray(i, j);
-                    pixel_color = pixel_color + ray_color(&r, world, self.depth);
+        let bar = ProgressBar::new((self.image_height * self.image_width) as u64);
+        bar.set_style(ProgressStyle::default_bar()
+            .template("{msg} [{elapsed_precise}] [{wide_bar:.cyan}] {pos}/{len} ({eta})")
+            .progress_chars("=> "));
+
+        let pixels: Vec<Vec<(i32, Color)>> = (0..self.image_height)
+            .into_par_iter()
+            .map(|j| {
+                let mut row_pixels = Vec::with_capacity(self.image_width as usize);
+                for i in 0..self.image_width {
+                    let mut pixel_color: Vec3 = Vec3::new(0.0, 0.0, 0.0);
+                    for _sample in 0..self.samples_per_pixel {
+                        let r: Ray = self.get_ray(i, j);
+                        pixel_color = pixel_color + ray_color(&r, world, self.depth);
+                    }
+                    let final_color = self.pixel_samples_scale * pixel_color;
+                    row_pixels.push((i, final_color));
                 }
+                bar.inc(self.image_width as u64);
+                row_pixels
+            })
+            .collect();
 
-                write_color(&mut file, &(self.pixel_samples_scale * pixel_color))?;
+        bar.finish_with_message("Rendering complete");
+
+        for row in pixels {
+            for (_i, color) in row {
+                write_color(&mut file, &color)?;
             }
-
-            stdout().flush().unwrap();
         }
+
+        stdout().flush().unwrap();
         Ok(())
     }
-
+    
     fn get_ray(&self, i: i32, j: i32) -> Ray {
         let offset: Vec3 = sample_square();
         //println!("{:?}", offset);
