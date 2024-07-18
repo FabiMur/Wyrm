@@ -44,6 +44,7 @@ impl AABBox {
         Self { x, y, z }
     }
 
+    // Getter function. 
     pub fn axis_interval(&self, n: usize) -> Interval {
         match n {
             0 => self.x,
@@ -68,9 +69,9 @@ impl AABBox {
         }
     }
 
+    // As when calculating the intersection between the bboxes we dont need the surface normal, hit point or
+    // any other stuff, this method is similar but no not the one of the hittable trait.
     pub fn hit(&self, r: &Ray, ray_t: &mut Interval) -> bool {
-        let mut tmin = ray_t.min;
-        let mut tmax = ray_t.max;
 
         for axis in 0..3 {
             let inv_d = 1.0 / r.dir[axis];
@@ -86,16 +87,10 @@ impl AABBox {
                 )
             };
 
-            tmin = tmin.max(t0);
-            tmax = tmax.min(t1);
-
-            if tmax <= tmin {
+            if ray_t.max.min(t1) <= ray_t.min.max(t0) {
                 return false;
             }
         }
-
-        ray_t.min = tmin;
-        ray_t.max = tmax;
 
         true
     }

@@ -13,10 +13,13 @@ pub struct BVHNode {
 impl BVHNode {
     pub fn new(mut objects: Vec<Arc<dyn Hittable + Send + Sync>>, start: usize, end: usize) -> Self {
         let mut bbox = AABBox::new_empty();
+
+        // Create a new bbox that enclouures all the objects in the list. 
         for object_index in start..end {
             bbox = AABBox::new_from_aabboxs(&bbox, &objects[object_index].bounding_box());
         }
 
+        // Get the longest axis of the resulting bbox along which we will divide into subboxes
         let axis = bbox.longest_axis();
         let comparator = if axis == 0 {
             box_x_compare
@@ -26,11 +29,11 @@ impl BVHNode {
             box_z_compare
         };
 
-        let object_span: usize = end - start;
+        let object_count: usize = end - start;
 
-        let (left, right) = if object_span == 1 {
+        let (left, right) = if object_count == 1 {
             (objects[start].clone(), objects[start].clone())
-        } else if object_span == 2 {
+        } else if object_count == 2 {
             if comparator(&objects[start], &objects[start + 1]) == Ordering::Less {
                 (objects[start].clone(), objects[start + 1].clone())
             } else {
@@ -38,7 +41,7 @@ impl BVHNode {
             }
         } else {
             objects[start..end].sort_by(|a, b| comparator(a, b));
-            let mid = start + object_span / 2;
+            let mid = start + object_count / 2;
             let left = Arc::new(BVHNode::new(objects.clone(), start, mid)) as Arc<dyn Hittable + Send + Sync>;
             let right = Arc::new(BVHNode::new(objects, mid, end)) as Arc<dyn Hittable + Send + Sync>;
             (left, right)
@@ -50,17 +53,21 @@ impl BVHNode {
 
 impl Hittable for BVHNode {
     fn hit(&self, r: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
+        // If the ray doesn't hit the bbox just return false
         if !self.bbox.hit(r, ray_t) {
             return false;
         }
 
         let mut hit_anything = false;
 
+        // If the ray hits left node update ray_t and rec so that it aslso hits 
+        // the right nod it has to be in a t closer the origin the one on left.
         if self.left.hit(r, ray_t, rec) {
             hit_anything = true;
             *ray_t = Interval { min: ray_t.min, max: rec.t };
         }
 
+        // If the ray hits right node
         if self.right.hit(r, ray_t, rec) {
             hit_anything = true;
         }

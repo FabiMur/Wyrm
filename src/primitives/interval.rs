@@ -64,6 +64,7 @@ impl Interval {
         }
     }
 
+    // Pad an interval with a certain delta
     pub fn expand(&self, delta: f64) -> Self {
         let padding = delta/2.0;
         Interval { 
