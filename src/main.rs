@@ -29,18 +29,21 @@ fn main() {
     // Texture inicialization
     let checker = CheckerTexture::new_from_colors(0.32, Color::new(0.3, 0.3, 0.3), Color::new(0.6,0.6,0.6));
     let material_ground = Lambertian::new_from_texture(Arc::new(checker));
-    let earth_texture = ImageTexture::new("earthSurface.jpg");
+    let earth_texture = ImageTexture::new("jupiter.jpeg");
 
-    // Material intialization
-    let material_left = Dielectric::new(1.5);
-    let material_center = Lambertian::new_from_texture(Arc::new(earth_texture));
-    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
+    // Materials
+    let left_red = Lambertian::new(Color::new(1.0, 0.2, 0.2));
+    let back_green = Lambertian::new(Color::new(0.2, 1.0, 0.2));
+    let right_blue = Lambertian::new(Color::new(0.2, 0.2, 1.0));
+    let upper_orange = Lambertian::new(Color::new(1.0, 0.5, 0.0));
+    let lower_teal = Lambertian::new(Color::new(0.2, 0.8, 0.8));
 
-    // Object Initialization
-    world.add(Arc::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, material_ground)));
-    //world.add(Arc::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, material_left)));
-    world.add(Arc::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, material_center)));
-    world.add(Arc::new(Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, material_right)));
+    // Quads
+    world.add(Arc::new(Quad::new(Point3::new(-3.0, -2.0, 5.0), Vec3::new(0.0, 0.0, -4.0), Vec3::new(0.0, 4.0, 0.0), left_red.clone())));
+    world.add(Arc::new(Quad::new(Point3::new(-2.0, -2.0, 0.0), Vec3::new(4.0, 0.0, 0.0), Vec3::new(0.0, 4.0, 0.0), back_green.clone())));
+    world.add(Arc::new(Quad::new(Point3::new(3.0, -2.0, 1.0), Vec3::new(0.0, 0.0, 4.0), Vec3::new(0.0, 4.0, 0.0), right_blue.clone())));
+    world.add(Arc::new(Quad::new(Point3::new(-2.0, 3.0, 1.0), Vec3::new(4.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 4.0), upper_orange.clone())));
+    world.add(Arc::new(Quad::new(Point3::new(-2.0, -3.0, 5.0), Vec3::new(4.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -4.0), lower_teal.clone())));
 
     // Build BVH from the temporary hittable object list and create a new hittable object list with it
     let bvh_node: Arc<BVHNode> = Arc::new(BVHNode::new(world.objects.clone(), 0, world.objects.len()));
@@ -48,12 +51,13 @@ fn main() {
     new_world.add(bvh_node);
 
     // Camera settings
-    let aspect_ratio: f64 = 16.0 / 9.0;
-    let image_width: i32 = 400;
-    let vfov: f64 = 20.0;
-    let lookfrom: Point3 = Point3::new(0.0, 0.0, -7.0);
-    let lookat: Point3 = Point3::new(0.0, 0.0, -1.0);
-    let vup: Point3 = Point3::new(0.0, 1.0, 0.0);
+    let aspect_ratio = 1.0;
+    let image_width = 400;
+    let vfov = 80.0;
+    let lookfrom = Point3::new(0.0, 0.0, 9.0);
+    let lookat = Point3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle = 0.0;
     let defocus_angle: f64 = 0.0;
     let focus_dist: f64 = (lookfrom - lookat).length();
 

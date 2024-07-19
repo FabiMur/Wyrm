@@ -28,4 +28,3 @@ pub trait Hittable: Sync {
 
     fn bounding_box(&self) -> AABBox;
 }
-

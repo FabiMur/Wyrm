@@ -10,7 +10,9 @@ pub struct AABBox {
 impl AABBox {
     // Main constructor
     pub fn new(x: Interval, y: Interval, z: Interval) -> Self {
-        AABBox { x, y, z }
+        let mut aabox = AABBox { x, y, z };
+        aabox.pad_to_minimums();
+        aabox
     }
 
     // Construct the bounding box taking 2 points as the extremes of the parallelepiped
@@ -23,7 +25,7 @@ impl AABBox {
         let y_interval = Interval { min: y_min, max: y_max };
         let z_interval = Interval { min: z_min, max: z_max };
 
-        Self { x: x_interval, y: y_interval, z: z_interval }
+       AABBox::new(x_interval, y_interval, z_interval)
     }
 
     // Construct the bounding box enclosing another 2
@@ -93,5 +95,21 @@ impl AABBox {
         }
 
         true
+    }
+
+    fn pad_to_minimums(&mut self) -> () {
+        let delta: f64 = 0.0001;
+        
+        if self.x.size() < delta {
+            self.x = self.x.expand(delta);
+        }
+
+        if self.y.size() < delta {
+            self.y = self.y.expand(delta);
+        }
+
+        if self.z.size() < delta {
+            self.z = self.z.expand(delta);
+        }
     }
 }

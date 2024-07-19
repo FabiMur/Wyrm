@@ -16,7 +16,7 @@ impl ImageTexture {
 impl Texture for ImageTexture {
 fn value(&self, mut u: f64, mut v: f64, _p: &Point3) -> Color {
         if self.image.height() <= 0 {
-            return Color::new(0.0, 1.0, 1.0); // Return cyan for debugging
+            return Color::new(1.0, 0.0, 0.0); // Return red for debugging
         }
 
         // Clamp input texture coordinates to [0,1] x [1,0]

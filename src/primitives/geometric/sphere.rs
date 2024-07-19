@@ -10,7 +10,7 @@ pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
     pub mat: MaterialArcWrapper,
-    pub bbox: AABBox,
+    pub bbox: AABBox
 }
 
 impl Sphere {
@@ -72,5 +72,4 @@ impl Hittable for Sphere {
     fn bounding_box(&self) -> AABBox {
         self.bbox
     }
-
 }
