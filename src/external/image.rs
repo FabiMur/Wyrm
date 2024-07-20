@@ -3,6 +3,7 @@ extern crate image;
 use std::env;
 use std::path::Path;
 
+#[derive(Default)]
 pub struct Image {
     width: u32,
     height: u32,

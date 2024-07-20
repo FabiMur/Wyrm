@@ -1,5 +1,7 @@
+use std::sync::Arc;
+
+use crate::materials::Material;
 use crate::hittable::{Hittable, HitRecord};
-use crate::materials::MaterialArcWrapper;
 use crate::primitives::*;
 use crate::bvh::AABBox;
 
@@ -9,14 +11,14 @@ pub struct Quad {
     pub corner: Point3,       // One of the corners of the quad
     pub edge1: Vec3,          // Vector representing one edge of the quad
     pub edge2: Vec3,          // Vector representing the other edge of the quad
-    pub mat: MaterialArcWrapper,
+    pub mat: Arc<dyn Material>,
     pub bbox: AABBox,         // Axis-aligned bounding box
     pub normal: Vec3,         // Surface normal
     pub offset: f64,          // Offset from the origin along the normal
 }
 
 impl Quad {
-    pub fn new(corner: Point3, edge1: Vec3, edge2: Vec3, mat: MaterialArcWrapper) -> Self {
+    pub fn new(corner: Point3, edge1: Vec3, edge2: Vec3, mat: Arc<dyn Material>) -> Self {
         let bbox_diagonal1 = AABBox::new_from_points(&corner, &(corner + edge1 + edge2));
         let bbox_diagonal2 = AABBox::new_from_points(&(corner + edge1), &(corner + edge2));
         let bbox = AABBox::new_from_aabboxs(&bbox_diagonal1, &bbox_diagonal2);
@@ -70,7 +72,7 @@ impl Hittable for Quad {
         // Record the intersection details
         rec.t = t;
         rec.p = intersection;
-        rec.mat = Some(self.mat.clone());
+        rec.mat = self.mat.clone();
         rec.set_face_normal(r, self.normal);
 
         true

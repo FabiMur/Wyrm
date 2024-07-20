@@ -3,9 +3,9 @@ use crate::primitives::*;
 use crate::textures::*;
 
 pub struct CheckerTexture {
-    pub inv_scale: f64,
-    pub even: Arc<dyn Texture>,
-    pub odd: Arc<dyn Texture>,
+    inv_scale: f64,
+    even: Arc<dyn Texture>,
+    odd: Arc<dyn Texture>,
 }
 
 impl CheckerTexture {
@@ -34,5 +34,15 @@ impl Texture for CheckerTexture {
             return self.odd.value(u, v, p);
         }
 
+    }
+}
+
+impl Default for CheckerTexture {
+    fn default() -> Self {
+        CheckerTexture {
+            inv_scale: 1.0/64.0,
+            even: Arc::new(SolidColor::new(Color::new(1.0,0.0, 0.0))),
+            odd: Arc::new(SolidColor::new(Color::new(0.0,0.0, 1.0))),
+        }
     }
 }

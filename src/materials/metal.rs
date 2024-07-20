@@ -1,18 +1,19 @@
 use std::sync::Arc;
 use crate::primitives::*;
 use crate::hittable::HitRecord;
-use crate::materials::{Material, MaterialArcWrapper};
+use crate::materials::Material;
 use crate::primitives::Vec3;
 
 // Specular Materials
+#[derive(Default)]
 pub struct Metal {
     albedo: Color,
     fuzz: f64,
 }
 
 impl Metal {
-    pub fn new(albedo: Color, fuzz: f64) -> MaterialArcWrapper {
-        MaterialArcWrapper(Arc::new(Metal { albedo, fuzz }) as Arc<dyn Material>)
+    pub fn new(albedo: Color, fuzz: f64) -> Arc<dyn Material> {
+        Arc::new(Metal { albedo, fuzz }) as Arc<dyn Material>
     }
 }
 

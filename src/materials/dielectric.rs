@@ -1,18 +1,21 @@
 use std::sync::Arc;
 use crate::primitives::*;
 use crate::hittable::HitRecord;
-use crate::materials::{Material, MaterialArcWrapper};
+use crate::materials::Material;
 use crate::utils::random_double;
 
+// Dielectric Materials, sometimes specular and sometimes refractive.
+// Following the Law of Reflection or Snell's Law
+
+#[derive(Default)]
 pub struct Dielectric {
     refraction_index: f64,
 }
 
-// Dielectric Materials, sometimes specular and sometimes refractive.
-// Following the Law of Reflection or Snell's Law
+
 impl Dielectric {
-    pub fn new(refraction_index: f64) -> MaterialArcWrapper {
-        MaterialArcWrapper(Arc::new(Dielectric { refraction_index }) as Arc<dyn Material>)
+    pub fn new(refraction_index: f64) -> Arc<dyn Material> {
+        Arc::new(Dielectric { refraction_index }) as Arc<dyn Material>
     }
 }
 

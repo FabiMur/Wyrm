@@ -2,8 +2,9 @@ use crate::primitives::*;
 use crate::textures::*;
 use crate::external::image::Image;
 
+#[derive(Default)]
 pub struct ImageTexture {
-    pub image: Image
+    image: Image
 }
 
 impl ImageTexture {

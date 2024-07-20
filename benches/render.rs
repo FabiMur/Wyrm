@@ -5,8 +5,8 @@ use criterion::{criterion_group, criterion_main, Criterion};
 extern crate wyrm;
 
 use wyrm::materials::{Lambertian, Metal, Dielectric};
-use wyrm::{primitives::*, MaterialArcWrapper};
-use wyrm::hittable::hittable_list::{HittableList};
+use wyrm::primitives::*;
+use wyrm::hittable::hittable_list::HittableList;
 use wyrm::primitives::sphere::Sphere;
 use wyrm::camera::Camera;
 use wyrm::utils::random_double;
@@ -30,7 +30,7 @@ fn render_benchmark1() {
             let center = Point3::new(i as f64 + 0.9 * random_double(), 0.2, j as f64 + 0.9 * random_double());
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                let sphere_material: MaterialArcWrapper;
+                let sphere_material: Arc<dyn Material>;
 
                 if choose_mat < 0.8 {
                     // diffuse

@@ -14,21 +14,21 @@ use crate::vec3::*;
 
 
 pub struct Camera {
-    pub image_width: i32,
-    pub image_height: i32,
-    pub center: Point3,
+    image_width: i32,
+    image_height: i32,
+    center: Point3,
 
-    pub pixel00_loc: Point3,
-    pub pixel_delta_u: Vec3,
-    pub pixel_delta_v: Vec3,
+    pixel00_loc: Point3,
+    pixel_delta_u: Vec3,
+    pixel_delta_v: Vec3,
 
-    pub samples_per_pixel: i32,
-    pub pixel_samples_scale: f64,
-    pub depth: i32,
+    samples_per_pixel: i32,
+    pixel_samples_scale: f64,
+    depth: i32,
 
-    pub defocus_u: Vec3,
-    pub defocus_v: Vec3,
-    pub defocus_angle: f64,
+    defocus_u: Vec3,
+    defocus_v: Vec3,
+    defocus_angle: f64,
 }
 
 impl Camera {
@@ -88,7 +88,7 @@ impl Camera {
         let pixel_samples_scale: f64 = 1.0 / samples_per_pixel as f64;
 
         // How many bounces is a given ray allowd to do
-        let depth: i32 = 25;
+        let depth: i32 = 35;
 
         Self {
             image_width,
@@ -185,21 +185,27 @@ pub fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
         return Color::new(0.0, 0.0, 0.0)
     }
 
-    if world.hit(r, &mut Interval::new(0.001, INFINITY), &mut rec) {
-        let mut scattered = Ray::default();  // Initialize with default value
-        let mut attenuation = Color::new(0.0, 0.0, 0.0);  // Initialize with default value
-        if let Some(material) = &rec.mat {
-            if material.scatter(r, &rec, &mut attenuation, &mut scattered) {
-                return attenuation * ray_color(&scattered, world, depth - 1);
-            }
-        }
-
-        return Color::new(0.0, 0.0, 0.0);
+    if !world.hit(r, &mut Interval::new(0.001, INFINITY), &mut rec) {
+        return Color::new(0.0, 0.0, 0.0); // Background color
     }
 
-    let unit_direction = r.direction().unit_vector();
-    let t = 0.5 * (unit_direction.y + 1.0);
-    (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
+    let mut scattered = Ray::default();
+    let mut attenuation = Color::new(0.0, 0.0, 0.0);
+    let material = &rec.mat;
+    
+    // Color emited by the material if any, black if none
+    let color_from_emission = material.emitted(rec.u, rec.v, rec.p);
+    
+    // If just emissive material
+    if !material.scatter(r, &rec, &mut attenuation, &mut scattered) {
+        return color_from_emission;
+    }
+    
+    // Scatter ray to the world
+    let color_from_scatter = attenuation * ray_color(&scattered, world, depth - 1);
+    
+    // Own light emitted + external light scattered
+    color_from_emission + color_from_scatter
 }
 
 

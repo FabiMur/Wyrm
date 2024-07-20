@@ -1,7 +1,8 @@
 use std::f64::consts::PI;
+use std::sync::Arc;
 
 use crate::hittable::{Hittable, HitRecord};
-use crate::materials::MaterialArcWrapper;
+use crate::materials::Material;
 use crate::primitives::*;
 use crate::bvh::AABBox;
 
@@ -9,12 +10,12 @@ use crate::bvh::AABBox;
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
-    pub mat: MaterialArcWrapper,
+    pub mat: Arc<dyn Material>,
     pub bbox: AABBox
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64, mat: MaterialArcWrapper) -> Self {
+    pub fn new(center: Point3, radius: f64, mat: Arc<dyn Material>) -> Self {
         let rvec = Vec3 { x: radius, y: radius, z: radius};
         let bbox = AABBox::new_from_points(&(center - rvec), &(center + rvec));
         Sphere { center, radius, mat , bbox}
@@ -50,7 +51,7 @@ impl Hittable for Sphere {
                 let outward_normal = (rec.p - self.center) / self.radius;
                 rec.set_face_normal(r, outward_normal);
                 (rec.u, rec.v) = Sphere::get_uv(&outward_normal);
-                rec.mat = Some(self.mat.clone());
+                rec.mat = self.mat.clone();
 
                 return true;
             }
@@ -61,7 +62,7 @@ impl Hittable for Sphere {
                 rec.p = r.at(rec.t);
                 let outward_normal = (rec.p - self.center) / self.radius;
                 rec.set_face_normal(r, outward_normal);
-                rec.mat = Some(self.mat.clone());
+                rec.mat = self.mat.clone();
 
                 return true;
             }
