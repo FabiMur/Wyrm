@@ -3,6 +3,7 @@ use crate::hittable::{Hittable, HitRecord};
 use crate::primitives::*;
 use crate::bvh::AABBox;
 use std::cmp::Ordering;
+use indicatif::{ProgressBar, ProgressStyle};
 
 pub struct BVHNode {
     pub bbox: AABBox,
@@ -11,10 +12,24 @@ pub struct BVHNode {
 }
 
 impl BVHNode {
-    pub fn new(mut objects: Vec<Arc<dyn Hittable + Send + Sync>>, start: usize, end: usize) -> Self {
+    pub fn new(objects: Vec<Arc<dyn Hittable + Send + Sync>>) -> Self {
+        let bar = ProgressBar::new(objects.len() as u64);
+        bar.set_style(
+            ProgressStyle::default_bar()
+                .template("{msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
+                .progress_chars("=>-"),
+        );
+
+        let node = BVHNode::construct(objects.clone(), 0, objects.len(), &bar);
+
+        bar.finish_with_message("BVH Construction Complete");
+        node
+    }
+
+    fn construct(mut objects: Vec<Arc<dyn Hittable + Send + Sync>>, start: usize, end: usize, bar: &ProgressBar) -> Self {
         let mut bbox = AABBox::new_empty();
 
-        // Create a new bbox that enclouures all the objects in the list. 
+        // Create a new bbox that encloses all the objects in the list.
         for object_index in start..end {
             bbox = AABBox::new_from_aabboxs(&bbox, &objects[object_index].bounding_box());
         }
@@ -42,10 +57,12 @@ impl BVHNode {
         } else {
             objects[start..end].sort_by(|a, b| comparator(a, b));
             let mid = start + object_count / 2;
-            let left = Arc::new(BVHNode::new(objects.clone(), start, mid)) as Arc<dyn Hittable + Send + Sync>;
-            let right = Arc::new(BVHNode::new(objects, mid, end)) as Arc<dyn Hittable + Send + Sync>;
+            let left = Arc::new(BVHNode::construct(objects.clone(), start, mid, bar)) as Arc<dyn Hittable + Send + Sync>;
+            let right = Arc::new(BVHNode::construct(objects, mid, end, bar)) as Arc<dyn Hittable + Send + Sync>;
             (left, right)
         };
+
+        bar.inc(1); // Increment the progress bar
 
         BVHNode { bbox, left, right }
     }
@@ -60,8 +77,8 @@ impl Hittable for BVHNode {
 
         let mut hit_anything = false;
 
-        // If the ray hits left node update ray_t and rec so that it aslso hits 
-        // the right nod it has to be in a t closer the origin the one on left.
+        // If the ray hits left node update ray_t and rec so that it also hits 
+        // the right node it has to be in a t closer the origin the one on left.
         if self.left.hit(r, ray_t, rec) {
             hit_anything = true;
             *ray_t = Interval { min: ray_t.min, max: rec.t };
