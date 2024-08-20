@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::utils::{INFINITY, NEG_INFINITY};
 
 #[derive(Debug, Copy, Clone)]
@@ -75,3 +77,24 @@ impl Interval {
     
 }
 
+impl Add<f64> for Interval {
+    type Output = Self;
+
+    fn add(self, displacement: f64) -> Self {
+        Self {
+            min: self.min + displacement,
+            max: self.max + displacement
+        }
+    }
+}
+
+impl Add<Interval> for f64 {
+    type Output = Interval;
+
+    fn add(self, interval: Interval) -> Interval {
+        Interval {
+            min: interval.min + self,
+            max: interval.max + self,
+        }
+    }
+}

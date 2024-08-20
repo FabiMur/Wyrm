@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::materials::Material;
-use crate::hittable::{Hittable, HitRecord};
+use crate::hittable::{Hittable, HitRecord, HittableList};
 use crate::primitives::*;
 use crate::bvh::AABBox;
 
@@ -36,6 +36,29 @@ impl Quad {
             offset,
         }
     }
+
+    pub fn new_box(corner_a: Point3, corner_b: Point3, mat: Arc<dyn Material>) -> HittableList {
+        // To store the 6 quads that form the 3D box
+        let mut sides = HittableList::new();
+
+        // Construct the 2 opposite vertices with the minimum and maximum cordinates
+        let min: Point3 = Point3::new(f64::min(corner_a.x, corner_b.x), f64::min(corner_a.y, corner_b.y), f64::min(corner_a.z, corner_b.z));
+        let max: Point3 = Point3::new(f64::max(corner_a.x, corner_b.x), f64::max(corner_a.y, corner_b.y), f64::max(corner_a.z, corner_b.z));
+
+        let dx: Vec3 = Vec3::new(max.x - min.x, 0.0, 0.0);
+        let dy: Vec3 = Vec3::new(0.0, max.y - min.y, 0.0);
+        let dz: Vec3 = Vec3::new(0.0, 0.0, max.z - min.z);
+
+        sides.add(Arc::new(Quad::new(Point3::new(min.x, min.y, max.z), dx, dy, mat.clone())));   // front
+        sides.add(Arc::new(Quad::new(Point3::new(max.x, min.y, max.z), -dz, dy, mat.clone())));  // right
+        sides.add(Arc::new(Quad::new(Point3::new(max.x, min.y, min.z), -dx, dy, mat.clone())));  // back
+        sides.add(Arc::new(Quad::new(Point3::new(min.x, min.y, min.z), dz, dy, mat.clone())));   // left
+        sides.add(Arc::new(Quad::new(Point3::new(min.x, max.y, max.z), dx, -dz, mat.clone())));  // top
+        sides.add(Arc::new(Quad::new(Point3::new(min.x, min.y, max.z), dx, dz, mat.clone())));   // bottom
+
+        sides
+    }
+
 }
 
 

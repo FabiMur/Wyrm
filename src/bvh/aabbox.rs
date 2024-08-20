@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::primitives::*;
 
 #[derive(Clone, Copy, Debug)]
@@ -110,6 +112,30 @@ impl AABBox {
 
         if self.z.size() < delta {
             self.z = self.z.expand(delta);
+        }
+    }
+}
+
+impl Add<Vec3> for AABBox {
+    type Output = Self;
+
+    fn add(self, offset: Vec3) -> Self {
+        Self {
+            x: self.x + offset.x,
+            y: self.y + offset.y,
+            z: self.z + offset.z
+        }
+    }
+}
+
+impl Add<AABBox> for Vec3 {
+    type Output = AABBox;
+
+    fn add(self, bbox: AABBox) -> AABBox {
+        AABBox {
+            x: bbox.x + self.x,
+            y: bbox.y + self.y,
+            z: bbox.z + self.z,
         }
     }
 }
