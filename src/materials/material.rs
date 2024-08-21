@@ -1,25 +1,47 @@
-use crate::primitives::{Ray, Color};
-use crate::hittable::HitRecord;
-use crate::Point3;
+use std::sync::Arc;
+use crate::primitives::*;
+use crate::scattering_function::*;
 
-pub trait Material: Send + Sync {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool;
-
-    fn emitted(&self, _u: f64, _v: f64, _p: Point3) -> Color {
-        Color::new(0.0, 0.0, 0.0)
-    }
+#[derive(Clone)]
+pub struct Material {
+    pub diffuse: Arc<dyn ScatteringFunction>,
+    pub specular: Arc<dyn ScatteringFunction>,
+    pub refractive: Arc<dyn ScatteringFunction>,
+    pub emit: Option<Color>,  // Optional emission color for emissive materials
+    pub kd: f64,  // Diffuse coefficient
+    pub ks: f64,  // Specular coefficient
+    pub kt: f64,  // Transmission/refractive coefficient
+    pub absorption: f64,  // Absorption coefficient
 }
 
-pub struct DefaultMaterial;
+impl Material {
+    pub fn new(
+        diffuse: Arc<dyn ScatteringFunction>,
+        specular: Arc<dyn ScatteringFunction>,
+        refractive: Arc<dyn ScatteringFunction>,
+        emit: Option<Color>,
+        mut kd: f64,
+        mut ks: f64,
+        mut kt: f64,
+        mut absorption: f64,
+    ) -> Self {
+        let sum = kd + ks + kt + absorption;
+        if sum > 0.0 {
+            kd /= sum;
+            ks /= sum;
+            kt /= sum;
+            absorption /= sum;
+        }
 
-impl Material for DefaultMaterial {
-    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _attenuation: &mut Color, _scattered: &mut Ray) -> bool {
-        false
-    }
-}
-
-impl Default for DefaultMaterial {
-    fn default() -> Self {
-        Self {}
+        Material {
+            diffuse,
+            specular,
+            refractive,
+            emit,
+            kd,
+            ks,
+            kt,
+            absorption,
+        }
     }
 }

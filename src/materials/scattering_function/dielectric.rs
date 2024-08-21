@@ -1,10 +1,10 @@
 use std::sync::Arc;
 use crate::primitives::*;
 use crate::hittable::HitRecord;
-use crate::materials::Material;
 use crate::utils::random_double;
 
-// Dielectric Materials, sometimes specular and sometimes refractive.
+use super::scattering_function::ScatteringFunction;
+// Dielectric ScatteringFunctions, sometimes specular and sometimes refractive.
 // Following the Law of Reflection or Snell's Law
 
 #[derive(Default)]
@@ -14,12 +14,12 @@ pub struct Dielectric {
 
 
 impl Dielectric {
-    pub fn new(refraction_index: f64) -> Arc<dyn Material> {
-        Arc::new(Dielectric { refraction_index }) as Arc<dyn Material>
+    pub fn new(refraction_index: f64) -> Arc<dyn ScatteringFunction> {
+        Arc::new(Dielectric { refraction_index }) as Arc<dyn ScatteringFunction>
     }
 }
 
-impl Material for Dielectric {
+impl ScatteringFunction for Dielectric {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
         *attenuation = Color::new(1.0, 1.0, 1.0);
         let ri: f64;

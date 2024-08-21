@@ -69,27 +69,28 @@ impl BVHNode {
 }
 
 impl Hittable for BVHNode {
-    fn hit(&self, r: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, ray_t: &mut Interval) -> Option<HitRecord> {
         // If the ray doesn't hit the bbox just return false
         if !self.bbox.hit(r, ray_t) {
-            return false;
+            return None;
         }
 
-        let mut hit_anything = false;
+        let mut rec: Option<HitRecord> = None;
 
         // If the ray hits left node update ray_t and rec so that it also hits 
         // the right node it has to be in a t closer the origin the one on left.
-        if self.left.hit(r, ray_t, rec) {
-            hit_anything = true;
-            *ray_t = Interval { min: ray_t.min, max: rec.t };
+        
+        if let Some(r) = self.left.hit(r, ray_t) {
+            *ray_t = Interval { min: ray_t.min, max: r.t };
+            rec = Some(r);
         }
 
         // If the ray hits right node
-        if self.right.hit(r, ray_t, rec) {
-            hit_anything = true;
+        if let Some(r) = self.right.hit(r, ray_t) {
+            rec = Some(r);
         }
 
-        hit_anything
+        rec
     }
 
     fn bounding_box(&self) -> AABBox {

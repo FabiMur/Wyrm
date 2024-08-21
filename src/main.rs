@@ -26,21 +26,68 @@ fn main() {
     // Create the hittable list (world)
     let mut world = HittableList::new();
 
-    // Define materials
-    let light = DiffuseLight::new(Color::new(18.0, 18.0, 18.0));
-    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
-    let green = Lambertian::new(Color::new(0.12, 0.45, 0.15));
-    let red = Lambertian::new(Color::new(0.65, 0.05, 0.05));
-    let blue = Lambertian::new(Color::new(0.05, 0.05, 0.65));
-    let orange = Lambertian::new(Color::new(0.95, 0.65, 0.05));
-    let glass = Dielectric::new(1.5);
+    let red = Lambertian::new(Color::new(1.0, 0.0, 0.0));
+    let green = Lambertian::new(Color::new(0.0, 1.0, 0.0));
+    let blue = Lambertian::new(Color::new(0.0, 0.0, 1.0));
+    let pourple = Lambertian::new(Color::new(5.0, 0.0, 7.0));
+    let white = Lambertian::new(Color::new(1.0, 1.0, 1.0));
+    let spec = Specular::new();
+    let refrac = Refractive::new(1.5);
+
+    let material_matt_red = Arc::new(Material::new(
+        red.clone(), 
+        spec.clone(), 
+        refrac.clone(),
+        None, 
+        1.0, 0.0, 0.0, 0.0)
+    );
+
+    let material_matt_green = Arc::new(Material::new(
+        green.clone(), 
+        spec.clone(), 
+        refrac.clone(),
+        None, 
+        1.0, 0.0, 0.0, 0.0)
+    );
+
+    let material_matt_blue = Arc::new(Material::new(
+        blue.clone(), 
+        spec.clone(), 
+        refrac.clone(),
+        None, 
+        1.0, 0.0, 0.0, 0.0)
+    );
+
+    let material_matt_white = Arc::new(Material::new(
+        white.clone(), 
+        spec.clone(), 
+        refrac.clone(),
+        None, 
+        1.0, 0.0, 0.0, 0.0)
+    );
+
+    let material_box = Arc::new(Material::new(
+        pourple.clone(), 
+        spec.clone(), 
+        refrac.clone(),
+        None, 
+        0.0, 0.0, 1.0, 0.0)
+    );
+    
+    let material_light = Arc::new(Material::new(
+        white.clone(), 
+        spec.clone(), 
+        refrac.clone(),
+        Some(Color::new(10.0, 10.0, 10.0)), 
+        1.0, 0.0, 0.0, 0.0)
+    );
 
     // Left Wall
     world.add(Arc::new(Quad::new(
         Point3::new(555.0, 0.0, 0.0),
         Vec3::new(0.0, 555.0, 0.0),
         Vec3::new(0.0, 0.0, 555.0),
-        green.clone(),
+        material_matt_green.clone(),
     )));
 
     // Right Wall
@@ -48,7 +95,7 @@ fn main() {
         Point3::new(0.0, 0.0, 0.0),
         Vec3::new(0.0, 555.0, 0.0),
         Vec3::new(0.0, 0.0, 555.0),
-        red.clone(),
+        material_matt_red.clone(),
     )));
 
     // Ceiling Light
@@ -56,15 +103,15 @@ fn main() {
         Point3::new(343.0, 554.0, 332.0),
         Vec3::new(-130.0, 0.0, 0.0),
         Vec3::new(0.0, 0.0, -105.0),
-        light.clone(),
+        material_light.clone(),
     )));
 
-    // Background Wazll
+    // Background Wall
     world.add(Arc::new(Quad::new(
         Point3::new(0.0, 0.0, 555.0),
         Vec3::new(555.0, 0.0, 0.0),
         Vec3::new(0.0, 555.0, 0.0),
-        blue.clone(),
+        material_matt_blue.clone(),
     )));
 
     // Floor
@@ -72,7 +119,7 @@ fn main() {
         Point3::new(0.0, 0.0, 0.0),
         Vec3::new(555.0, 0.0, 0.0),
         Vec3::new(0.0, 0.0, 555.0),
-        white.clone(),
+        material_matt_white.clone(),
     )));
 
     // Ceiling
@@ -80,33 +127,23 @@ fn main() {
         Point3::new(0.0, 555.0, 0.0),
         Vec3::new(555.0, 0.0, 0.0),
         Vec3::new(0.0, 0.0, 555.0),
-        white.clone(),
+        material_matt_white.clone(),
     )));
 
     // Big Box
     let mut box_1 = Arc::new(Quad::new_box(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 330.0, 165.0),
-        glass.clone(),
+        material_box.clone(),
     ));
     let box_1 =  Arc::new(RotationY::new(box_1, 15.0));
     let box_1 =  Arc::new(Translation::new(box_1, Vec3::new(265.0, 0.0, 295.0)));
     world.add(box_1);
     
-
-    // Small Box
-    let mut box_2 = Arc::new(Quad::new_box(
-        Point3::new(0.0, 0.0, 0.0),
-        Point3::new(165.0, 165.0, 165.0),
-        white.clone(),
-    ));
-    let box_2 =  Arc::new(RotationY::new(box_2, -18.0));
-    let box_2 =  Arc::new(Translation::new(box_2, Vec3::new(130.0, 0.0, 65.0)));
-    world.add(box_2);
     
     // Camera settings
     let aspect_ratio = 1.0;
-    let image_width = 1440;
+    let image_width = 500;
     let vfov = 40.0;
     let lookfrom = Point3::new(278.0, 278.0, -800.0);
     let lookat = Point3::new(278.0, 278.0, 0.0);

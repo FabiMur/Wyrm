@@ -10,12 +10,12 @@ use crate::bvh::AABBox;
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
-    pub mat: Arc<dyn Material>,
+    pub mat: Arc<Material>,
     pub bbox: AABBox
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64, mat: Arc<dyn Material>) -> Self {
+    pub fn new(center: Point3, radius: f64, mat: Arc<Material>) -> Self {
         let rvec = Vec3 { x: radius, y: radius, z: radius};
         let bbox = AABBox::new_from_points(&(center - rvec), &(center + rvec));
         Sphere { center, radius, mat , bbox}
@@ -33,7 +33,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, r: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, ray_t: &mut Interval) -> Option<HitRecord> {
         let oc = r.origin() - self.center;
         let a = r.direction().length_squared();
         let half_b = Vec3::dot(&r.direction(), &oc);
@@ -46,28 +46,48 @@ impl Hittable for Sphere {
             // Find the nearest root that lies in the acceptable range.
             let mut root = (-half_b - sqrtd) / a;
             if root < ray_t.max && root > ray_t.min {
-                rec.t = root;
-                rec.p = r.at(rec.t);
-                let outward_normal = (rec.p - self.center) / self.radius;
-                rec.set_face_normal(r, outward_normal);
-                (rec.u, rec.v) = Sphere::get_uv(&outward_normal);
-                rec.mat = self.mat.clone();
+                let outward_normal = (r.at(root) - self.center) / self.radius;
+                let u: f64;
+                let v: f64;
+                (u, v) = Sphere::get_uv(&outward_normal);
 
-                return true;
+                let mut rec = HitRecord::new(
+                    r.at(root),
+                    outward_normal,
+                    self.mat.clone(),
+                    root,
+                    u,
+                    v,
+                    false
+                );
+                rec.set_face_normal(r, outward_normal);
+
+                return Some(rec);
             }
 
             root = (-half_b + sqrtd) / a;
             if root < ray_t.max && root > ray_t.min {
-                rec.t = root;
-                rec.p = r.at(rec.t);
-                let outward_normal = (rec.p - self.center) / self.radius;
-                rec.set_face_normal(r, outward_normal);
-                rec.mat = self.mat.clone();
+                let outward_normal = (r.at(root) - self.center) / self.radius;
+                let u: f64;
+                let v: f64;
+                (u, v) = Sphere::get_uv(&outward_normal);
 
-                return true;
+                let mut rec = HitRecord::new(
+                    r.at(root),
+                    outward_normal,
+                    self.mat.clone(),
+                    root,
+                    u,
+                    v,
+                    false
+                );
+                rec.set_face_normal(r, outward_normal);
+
+                return Some(rec);
             }
         }
-        false
+
+        None
     }
 
     fn bounding_box(&self) -> AABBox {

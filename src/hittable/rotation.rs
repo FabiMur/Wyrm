@@ -51,7 +51,7 @@ impl RotationY {
 }
 
 impl Hittable for RotationY {
-    fn hit(&self, r: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, ray_t: &mut Interval) -> Option<HitRecord> {
         // change the ray from world space to object space
         let mut origin: Point3 = r.origin();
         let mut direction: Vec3 = r.direction();
@@ -63,27 +63,26 @@ impl Hittable for RotationY {
         direction[2] = self.sin_theta* r.direction()[0] + self.cos_theta*r.direction()[2];
 
         let rotated_r: Ray = Ray::new(origin, direction);
+        
+        if let Some(mut rec) = self.object.hit(&rotated_r, ray_t) {
+            // Change the intersection point from object space to world space
+            let mut p:Point3 = rec.p;
+            p[0] = self.cos_theta*rec.p[0] + self.sin_theta*rec.p[2];
+            p[2] = -self.sin_theta*rec.p[0] + self.cos_theta*rec.p[2];
 
-        // Determine whether an intersection exists in object space (and if so, where)
-        if !self.object.hit(&rotated_r, ray_t, rec) {
-            return false
+            // Change the object normal from object space to world space
+            let mut normal: Point3 = rec.normal;
+            normal[0] = self.cos_theta*rec.normal[0] + self.sin_theta*rec.normal[2];
+            normal[2] = -self.sin_theta*rec.normal[0] + self.cos_theta*rec.normal[2];
+
+            rec.p = p;
+            rec.normal = normal;
+
+            return Some(rec)
+        } else {
+            return None;
         }
-
-        // Change the intersection point from object space to world space
-        let mut p:Point3 = rec.p;
-        p[0] = self.cos_theta*rec.p[0] + self.sin_theta*rec.p[2];
-        p[2] = -self.sin_theta*rec.p[0] + self.cos_theta*rec.p[2];
-
-        // Change the object normal from object space to world space
-        let mut normal: Point3 = rec.normal;
-        normal[0] = self.cos_theta*rec.normal[0] + self.sin_theta*rec.normal[2];
-        normal[2] = -self.sin_theta*rec.normal[0] + self.cos_theta*rec.normal[2];
-
-        rec.p = p;
-        rec.normal = normal;
-
-        return true;
-    }
+        }
 
     fn bounding_box(&self) -> AABBox {
         self.bbox

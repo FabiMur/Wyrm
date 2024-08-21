@@ -8,7 +8,7 @@ use crate::materials::Material;
 use crate::primitives::*;
 use crate::hittable::hittable_list::HittableList;
 
-pub fn load_ply(file_path: &str, mat: Arc<dyn Material>) -> HittableList {
+pub fn load_ply(file_path: &str, mat: Arc<Material>) -> HittableList {
     let mut world = HittableList::new();
 
     let file = File::open(file_path).expect("Failed to open file");

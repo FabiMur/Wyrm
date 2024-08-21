@@ -9,7 +9,7 @@ use crate::primitives::ray::Ray;
 use crate::primitives::color::{Color, write_color};
 use crate::primitives::interval::Interval;
 use crate::hittable::{HitRecord, Hittable};
-use crate::utils::{INFINITY, random_double, degrees_to_radians};
+use crate::utils::{degrees_to_radians, random_double, random_double_range, INFINITY};
 use crate::vec3::*;
 
 
@@ -84,11 +84,11 @@ impl Camera {
         let defocus_v = v * defocus_radius;
 
         // Samples per pixel used for antialiasing
-        let samples_per_pixel: i32 = 500;
+        let samples_per_pixel: i32 = 100;
         let pixel_samples_scale: f64 = 1.0 / samples_per_pixel as f64;
 
         // How many bounces is a given ray allowd to do
-        let depth: i32 = 30;
+        let depth: i32 = 8;
 
         Self {
             image_width,
@@ -177,37 +177,59 @@ fn sample_square() -> Vec3 {
 }
 
 
-
 pub fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
-    let mut rec = HitRecord::default();
     if depth <= 0 {
         // If we have exceeded the ray bounce limit, no more light is scattered.
-        return Color::new(0.0, 0.0, 0.0)
+        return Color::new(0.0, 0.0, 0.0);
     }
 
-    if !world.hit(r, &mut Interval::new(0.001, INFINITY), &mut rec) {
+    let hit_record: Option<HitRecord> = world.hit(r, &mut Interval::new(0.001, INFINITY));
+
+    if hit_record.is_none() {
         return Color::new(0.0, 0.0, 0.0); // Background color
     }
 
-    let mut scattered = Ray::default();
+    let hit_record: HitRecord = hit_record.unwrap();
+
+    let random_behavior: f64 = random_double_range(0.0, 1.0);
+
+    let mut scattered_ray = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
     let mut attenuation = Color::new(0.0, 0.0, 0.0);
-    let material = &rec.mat;
-    
-    // Color emited by the material if any, black if none
-    let color_from_emission = material.emitted(rec.u, rec.v, rec.p);
-    
-    // If just emissive material
-    if !material.scatter(r, &rec, &mut attenuation, &mut scattered) {
-        return color_from_emission;
+
+    let material = &hit_record.mat;
+
+    let scattered: Color = if random_behavior < material.kd {
+        // Diffuse reflection
+        if material.diffuse.scatter(r, &hit_record, &mut attenuation, &mut scattered_ray) {
+            attenuation * ray_color(&scattered_ray, world, depth - 1)
+        } else {
+            Color::new(0.0, 0.0, 0.0)
+        }
+    } else if random_behavior < material.kd + material.ks {
+        // Specular reflection
+        if material.specular.scatter(r, &hit_record, &mut attenuation, &mut scattered_ray) {
+            attenuation * ray_color(&scattered_ray, world, depth - 1)
+        } else {
+            Color::new(0.0, 0.0, 0.0)
+        }
+    } else if random_behavior < material.kd + material.ks + material.kt {
+        // Refraction
+        if material.refractive.scatter(r, &hit_record, &mut attenuation, &mut scattered_ray) {
+            attenuation * ray_color(&scattered_ray, world, depth - 1)
+        } else {
+            Color::new(0.0, 0.0, 0.0)
+        }
+    } else {
+        // Absorption or no scattering
+        Color::new(0.0, 0.0, 0.0)
+    };
+
+    // Add emission if any
+    if let Some(emit_color) = material.emit {
+        scattered + emit_color
+    } else {
+        scattered
     }
-    
-    // Scatter ray to the world
-    let color_from_scatter = attenuation * ray_color(&scattered, world, depth - 1);
-    
-    // Own light emitted + external light scattered
-    color_from_emission + color_from_scatter
 }
-
-
 
 

@@ -18,19 +18,17 @@ impl Translation {
 }
 
 impl Hittable for Translation {
-    fn hit(&self, r: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, ray_t: &mut Interval) -> Option<HitRecord> {
         // Movre the ray backwards by the offset
         let offset_ray: Ray = Ray::new(r.origin() - self.offset, r.direction());
 
         // Determine whether an intersection exists along the offset ray (and if so, where)
-        if !self.object.hit(&offset_ray, ray_t, rec) {
-            return false;
+        if let Some(mut rec) = self.object.hit(&offset_ray, ray_t) {
+            rec.p = rec.p + self.offset;
+            return Some(rec)
+        } else {
+            return None;
         }
-
-        // Move the intersection point forwards by the offset
-        rec.p = rec.p + self.offset;
-
-        true
     }
 
     fn bounding_box(&self) -> AABBox {

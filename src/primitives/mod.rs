@@ -13,5 +13,3 @@ pub use self::interval::Interval;
 
 pub mod geometric;
 pub use self::geometric::*;
-
-
